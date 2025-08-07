@@ -38,7 +38,7 @@ export async function getLeagues(): Promise<League[]> {
   // Filtering for top leagues as API returns many
   const topLeagues = [39, 140, 135, 78, 61, 2, 3]; // PL, La Liga, Serie A, Bundesliga, Ligue 1, UCL, UEL
   return data
-    .filter(item => topLeagues.includes(item.league.id) && item.seasons.some((s:any) => s.current))
+    .filter(item => topLeagues.includes(item.league.id))
     .map(item => ({
         id: item.league.id,
         name: item.league.name,
@@ -47,9 +47,15 @@ export async function getLeagues(): Promise<League[]> {
 }
 
 export async function getSeasons(): Promise<Season[]> {
-  const data = await fetchFromApi<{response: number[]}>('leagues/seasons');
-  if (!data || !Array.isArray(data.response)) return [{ year: new Date().getFullYear() }];
-  return data.response.map((year: number) => ({ year })).reverse();
+  // The API-Football free plan has limitations on accessible seasons.
+  // Returning a static list of recent seasons as requested.
+  return [
+    { year: 2025 },
+    { year: 2024 },
+    { year: 2023 },
+    { year: 2022 },
+    { year: 2021 },
+  ].sort((a,b) => b.year - a.year);
 }
 
 export async function getStandings(leagueId: string, season: string): Promise<Standing[]> {

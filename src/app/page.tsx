@@ -24,16 +24,25 @@ export default function Home() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const [leaguesData, seasonsData] = await Promise.all([getLeagues(), getSeasons()]);
-      setLeagues(leaguesData);
-      setSeasons(seasonsData);
-      const standingsData = await getStandings(selectedLeague, selectedSeason);
-      setStandings(standingsData);
-      setLoading(false);
+    async function fetchInitialData() {
+        setLoading(true);
+        const [leaguesData, seasonsData] = await Promise.all([getLeagues(), getSeasons()]);
+        setLeagues(leaguesData);
+        setSeasons(seasonsData);
+        setLoading(false);
     }
-    fetchData();
+    fetchInitialData();
+  }, []);
+
+  React.useEffect(() => {
+    async function fetchStandings() {
+        if (!selectedLeague || !selectedSeason) return;
+        setLoading(true);
+        const standingsData = await getStandings(selectedLeague, selectedSeason);
+        setStandings(standingsData);
+        setLoading(false);
+    }
+    fetchStandings();
   }, [selectedLeague, selectedSeason]);
   
   const handleLeagueChange = (leagueId: string) => {
