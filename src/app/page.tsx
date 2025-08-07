@@ -19,7 +19,7 @@ export default function Home() {
   const [leagues, setLeagues] = React.useState<League[]>([]);
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [selectedLeague, setSelectedLeague] = React.useState<string>('39');
-  const [selectedSeason, setSelectedSeason] = React.useState<string>('2024');
+  const [selectedSeason, setSelectedSeason] = React.useState<string>('2025');
   const [standings, setStandings] = React.useState<Standing[]>([]);
   const [loading, setLoading] = React.useState(true);
 

@@ -81,7 +81,7 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
 }
 
 export async function getTeamPlayers(teamId: string): Promise<Player[]> {
-    const season = new Date().getFullYear() -1; // Use last season for more complete data
+    const season = 2025; // Use last season for more complete data
     const data = await fetchFromApi<any[]>(`players/squads?team=${teamId}`);
     if (!data || !data[0]?.players) return [];
   
@@ -97,7 +97,7 @@ export async function getTeamPlayers(teamId: string): Promise<Player[]> {
 }
 
 export async function getPlayer(playerId: string): Promise<Player | undefined> {
-    const season = new Date().getFullYear() - 1;
+    const season = 2025;
     const data = await fetchFromApi<any[]>(`players?id=${playerId}&season=${season}`);
     if (!data || data.length === 0) return undefined;
 
@@ -126,7 +126,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
 }
 
 export async function getTeamFixtures(teamId: string): Promise<any[]> {
-    const season = new Date().getFullYear();
+    const season = 2025;
     const data = await fetchFromApi<any[]>(`fixtures?team=${teamId}&season=${season}`);
     if (!data) return [];
 
@@ -171,7 +171,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
     league: matchData.league,
     teams: matchData.teams,
     goals: matchData.goals,
-    events: matchData.events,
+    events: match.events,
     lineups: lineupsData || [],
     statistics: matchData.statistics,
   } as Match;
