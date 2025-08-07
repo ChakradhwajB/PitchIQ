@@ -10,6 +10,8 @@ const apiHeaders = {
 
 // Helper function to make API calls
 async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
+ console.log(process.env.NEXT_PUBLIC_API_FOOTBALL_KEY); // Temporary log
+  console.log(process.env); // Log the entire process.env object
   if (!API_KEY) {
     console.error("API-Football key is missing. Add it to your .env file.");
     return null;
