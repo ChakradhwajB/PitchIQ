@@ -10,8 +10,6 @@ const apiHeaders = {
 
 // Helper function to make API calls
 async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
- console.log(process.env.NEXT_PUBLIC_API_FOOTBALL_KEY); // Temporary log
-  console.log(process.env); // Log the entire process.env object
   if (!API_KEY) {
     console.error("API-Football key is missing. Add it to your .env file.");
     return null;
@@ -23,7 +21,7 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
       return null;
     }
     const data = await response.json();
-    if (data.errors && Object.keys(data.errors).length > 0) {
+    if (data.errors && (Array.isArray(data.errors) ? data.errors.length > 0 : Object.keys(data.errors).length > 0)) {
         console.error('API-Football Error:', data.errors);
         return null;
     }
@@ -35,12 +33,12 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
 }
 
 export async function getLeagues(): Promise<League[]> {
-  const data = await fetchFromApi<any[]>('leagues?current=true&type=league');
+  const data = await fetchFromApi<any[]>('leagues');
   if (!data) return [];
   // Filtering for top leagues as API returns many
   const topLeagues = [39, 140, 135, 78, 61, 2, 3]; // PL, La Liga, Serie A, Bundesliga, Ligue 1, UCL, UEL
   return data
-    .filter(item => topLeagues.includes(item.league.id))
+    .filter(item => topLeagues.includes(item.league.id) && item.seasons.some((s:any) => s.current))
     .map(item => ({
         id: item.league.id,
         name: item.league.name,
@@ -81,7 +79,7 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
 }
 
 export async function getTeamPlayers(teamId: string): Promise<Player[]> {
-    const season = 2025; // Use last season for more complete data
+    const season = 2023; // Use last season for more complete data
     const data = await fetchFromApi<any[]>(`players/squads?team=${teamId}`);
     if (!data || !data[0]?.players) return [];
   
@@ -97,7 +95,7 @@ export async function getTeamPlayers(teamId: string): Promise<Player[]> {
 }
 
 export async function getPlayer(playerId: string): Promise<Player | undefined> {
-    const season = 2025;
+    const season = 2023;
     const data = await fetchFromApi<any[]>(`players?id=${playerId}&season=${season}`);
     if (!data || data.length === 0) return undefined;
 
@@ -126,7 +124,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
 }
 
 export async function getTeamFixtures(teamId: string): Promise<any[]> {
-    const season = 2025;
+    const season = 2023;
     const data = await fetchFromApi<any[]>(`fixtures?team=${teamId}&season=${season}`);
     if (!data) return [];
 
@@ -171,7 +169,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
     league: matchData.league,
     teams: matchData.teams,
     goals: matchData.goals,
-    events: match.events,
+    events: matchData.events,
     lineups: lineupsData || [],
     statistics: matchData.statistics,
   } as Match;
