@@ -1,7 +1,7 @@
 import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats } from './types';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
-const API_KEY = process.env.API_FOOTBALL_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
 
 const apiHeaders = {
   "x-rapidapi-host": "v3.football.api-sports.io",
