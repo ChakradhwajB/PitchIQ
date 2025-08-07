@@ -37,15 +37,17 @@ export default function Home() {
   const [selectedStage, setSelectedStage] = React.useState<string>(TOURNAMENT_STAGES[0]);
 
   const isTournament = TOURNAMENT_LEAGUE_IDS.includes(parseInt(selectedLeague));
+  const showStandingsForTournament = isTournament && selectedStage === 'Group Stage';
 
   React.useEffect(() => {
     async function fetchInitialData() {
       setLoading(true);
       const [leaguesData, seasonsData] = await Promise.all([getLeagues(), getSeasons()]);
       setLeagues(leaguesData);
-      setSeasons(seasonsData.sort((a,b) => b.year - a.year));
-      if (seasonsData.length > 0) {
-        setSelectedSeason(seasonsData.find(s => s.year === 2023)?.year.toString() || seasonsData[0].year.toString());
+      const sortedSeasons = seasonsData.sort((a,b) => b.year - a.year);
+      setSeasons(sortedSeasons);
+      if (sortedSeasons.length > 0) {
+        setSelectedSeason(sortedSeasons.find(s => s.year === 2023)?.year.toString() || sortedSeasons[0].year.toString());
       }
       setLoading(false);
     }
@@ -58,9 +60,15 @@ export default function Home() {
         setLoading(true);
 
         if (isTournament) {
-            setStandings([]);
-            const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(' ', '-'));
-            setFixtures(fixturesData);
+             if (showStandingsForTournament) {
+                setFixtures([]);
+                const standingsData = await getStandings(selectedLeague, selectedSeason);
+                setStandings(standingsData);
+             } else {
+                setStandings([]);
+                const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(' ', '-'));
+                setFixtures(fixturesData);
+             }
         } else {
             setFixtures([]);
             const standingsData = await getStandings(selectedLeague, selectedSeason);
@@ -70,7 +78,7 @@ export default function Home() {
         setLoading(false);
     }
     fetchData();
-  }, [selectedLeague, selectedSeason, selectedStage, isTournament]);
+  }, [selectedLeague, selectedSeason, selectedStage, isTournament, showStandingsForTournament]);
   
   const handleLeagueChange = (leagueId: string) => {
     setSelectedLeague(leagueId);
@@ -86,6 +94,7 @@ export default function Home() {
 
   const selectedLeagueName = leagues.find(l => l.id.toString() === selectedLeague)?.name || 'League';
   const isGroupStage = standings.length > 1;
+  const showFixtures = isTournament && !showStandingsForTournament;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -154,7 +163,7 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
-          ) : isTournament ? (
+          ) : showFixtures ? (
             <Card className="shadow-lg rounded-xl">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">Fixtures</CardTitle>
