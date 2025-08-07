@@ -1,0 +1,121 @@
+
+[
+  {
+    "team": {
+      "id": 42,
+      "name": "Arsenal"
+    },
+    "players": [
+      {
+        "player": {
+          "id": 278,
+          "name": "Kai Havertz",
+          "age": 25,
+          "nationality": "Germany",
+          "height": "193 cm",
+          "weight": "83 kg",
+          "photo": "https://media.api-sports.io/football/players/278.png"
+        },
+        "statistics": [
+          {
+            "team": {
+              "id": 42,
+              "name": "Arsenal",
+              "logo": "https://media.api-sports.io/football/teams/42.png"
+            },
+            "league": {
+              "id": 39,
+              "name": "Premier League",
+              "logo": "https://media.api-sports.io/football/leagues/39.png"
+            },
+            "games": {
+              "appearences": 37,
+              "minutes": 2984,
+              "position": "Attacker"
+            },
+            "goals": {
+              "total": 13,
+              "assists": 7
+            }
+          }
+        ]
+      },
+      {
+        "player": {
+          "id": 6,
+          "name": "Martin Ødegaard",
+          "age": 25,
+          "nationality": "Norway",
+          "height": "178 cm",
+          "weight": "68 kg",
+          "photo": "https://media.api-sports.io/football/players/6.png"
+        },
+        "statistics": [
+          {
+            "team": {
+              "id": 42,
+              "name": "Arsenal",
+              "logo": "https://media.api-sports.io/football/teams/42.png"
+            },
+            "league": {
+              "id": 39,
+              "name": "Premier League",
+              "logo": "https://media.api-sports.io/football/leagues/39.png"
+            },
+            "games": {
+              "appearences": 35,
+              "minutes": 3139,
+              "position": "Midfielder"
+            },
+            "goals": {
+              "total": 8,
+              "assists": 10
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "team": {
+      "id": 45,
+      "name": "Everton"
+    },
+    "players": [
+      {
+        "player": {
+          "id": 24,
+          "name": "Dominic Calvert-Lewin",
+          "age": 27,
+          "nationality": "England",
+          "height": "189 cm",
+          "weight": "80 kg",
+          "photo": "https://media.api-sports.io/football/players/24.png"
+        },
+        "statistics": [
+           {
+            "team": {
+              "id": 45,
+              "name": "Everton",
+              "logo": "https://media.api-sports.io/football/teams/45.png"
+            },
+            "league": {
+              "id": 39,
+              "name": "Premier League",
+              "logo": "https://media.api-sports.io/football/leagues/39.png"
+            },
+            "games": {
+              "appearences": 32,
+              "minutes": 2244,
+              "position": "Attacker"
+            },
+            "goals": {
+              "total": 7,
+              "assists": 2
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

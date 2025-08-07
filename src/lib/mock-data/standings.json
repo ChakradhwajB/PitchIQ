@@ -1,0 +1,107 @@
+
+[
+  {
+    "league": {
+      "id": 39,
+      "name": "Premier League",
+      "country": "England",
+      "logo": "https://media.api-sports.io/football/leagues/39.png",
+      "flag": "https://media.api-sports.io/flags/gb.svg",
+      "season": 2023,
+      "standings": [
+        [
+          {
+            "rank": 1,
+            "team": {
+              "id": 50,
+              "name": "Manchester City",
+              "logo": "https://media.api-sports.io/football/teams/50.png"
+            },
+            "points": 91,
+            "goalsDiff": 62,
+            "form": "WWWWW",
+            "all": {
+              "played": 38,
+              "win": 28,
+              "draw": 7,
+              "lose": 3,
+              "goals": { "for": 96, "against": 34 }
+            }
+          },
+          {
+            "rank": 2,
+            "team": {
+              "id": 42,
+              "name": "Arsenal",
+              "logo": "https://media.api-sports.io/football/teams/42.png"
+            },
+            "points": 89,
+            "goalsDiff": 62,
+            "form": "WWWWW",
+            "all": {
+              "played": 38,
+              "win": 28,
+              "draw": 5,
+              "lose": 5,
+              "goals": { "for": 91, "against": 29 }
+            }
+          },
+          {
+            "rank": 3,
+            "team": {
+              "id": 40,
+              "name": "Liverpool",
+              "logo": "https://media.api-sports.io/football/teams/40.png"
+            },
+            "points": 82,
+            "goalsDiff": 45,
+            "form": "WDLWW",
+            "all": {
+              "played": 38,
+              "win": 24,
+              "draw": 10,
+              "lose": 4,
+              "goals": { "for": 86, "against": 41 }
+            }
+          },
+          {
+            "rank": 4,
+            "team": {
+              "id": 66,
+              "name": "Aston Villa",
+              "logo": "https://media.api-sports.io/football/teams/66.png"
+            },
+            "points": 68,
+            "goalsDiff": 15,
+            "form": "LDLDW",
+            "all": {
+              "played": 38,
+              "win": 20,
+              "draw": 8,
+              "lose": 10,
+              "goals": { "for": 76, "against": 61 }
+            }
+          },
+          {
+            "rank": 5,
+            "team": {
+              "id": 47,
+              "name": "Tottenham",
+              "logo": "https://media.api-sports.io/football/teams/47.png"
+            },
+            "points": 66,
+            "goalsDiff": 13,
+            "form": "WLLLL",
+            "all": {
+              "played": 38,
+              "win": 20,
+              "draw": 6,
+              "lose": 12,
+              "goals": { "for": 74, "against": 61 }
+            }
+          }
+        ]
+      ]
+    }
+  }
+]

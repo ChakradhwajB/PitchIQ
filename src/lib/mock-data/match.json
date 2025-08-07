@@ -1,0 +1,172 @@
+
+[
+  {
+    "fixture": {
+      "id": 1,
+      "date": "2024-05-19T15:00:00+00:00",
+      "venue": {
+        "name": "Emirates Stadium"
+      }
+    },
+    "league": {
+      "name": "Premier League",
+      "round": "Regular Season - 38"
+    },
+    "teams": {
+      "home": {
+        "id": 42,
+        "name": "Arsenal",
+        "logo": "https://media.api-sports.io/football/teams/42.png",
+        "winner": true
+      },
+      "away": {
+        "id": 45,
+        "name": "Everton",
+        "logo": "https://media.api-sports.io/football/teams/45.png",
+        "winner": false
+      }
+    },
+    "goals": {
+      "home": 2,
+      "away": 1
+    },
+    "events": [
+      {
+        "time": { "elapsed": 40 },
+        "team": { "id": 45, "name": "Everton" },
+        "player": { "id": 19184, "name": "I. Gueye" },
+        "type": "Goal",
+        "detail": "Normal Goal"
+      },
+      {
+        "time": { "elapsed": 43 },
+        "team": { "id": 42, "name": "Arsenal" },
+        "player": { "id": 15352, "name": "T. Tomiyasu" },
+        "type": "Goal",
+        "detail": "Normal Goal"
+      },
+       {
+        "time": { "elapsed": 69 },
+        "team": { "id": 42, "name": "Arsenal" },
+        "player": { "id": 1466, "name": "Gabriel Jesus" },
+        "type": "subst",
+        "detail": "L. Trossard"
+      },
+      {
+        "time": { "elapsed": 75 },
+        "team": { "id": 45, "name": "Everton" },
+        "player": { "id": 18788, "name": "J. Tarkowski" },
+        "type": "Card",
+        "detail": "Yellow Card"
+      },
+      {
+        "time": { "elapsed": 89 },
+        "team": { "id": 42, "name": "Arsenal" },
+        "player": { "id": 278, "name": "K. Havertz" },
+        "type": "Goal",
+        "detail": "Normal Goal"
+      }
+    ],
+    "lineups": [
+      {
+        "team": { "id": 42, "name": "Arsenal", "logo": "https://media.api-sports.io/football/teams/42.png", "winner": true },
+        "formation": "4-3-3",
+        "startXI": [
+            {"player": {"id": 1,"name": "David Raya","pos": "G","grid": "1:1"}},
+            {"player": {"id": 2,"name": "B. White","pos": "D","grid": "2:4"}},
+            {"player": {"id": 3,"name": "W. Saliba","pos": "D","grid": "2:3"}},
+            {"player": {"id": 4,"name": "Gabriel Magalhães","pos": "D","grid": "2:2"}},
+            {"player": {"id": 5,"name": "T. Tomiyasu","pos": "D","grid": "2:1"}},
+            {"player": {"id": 6,"name": "M. Ødegaard","pos": "M","grid": "3:3"}},
+            {"player": {"id": 7,"name": "T. Partey","pos": "M","grid": "3:2"}},
+            {"player": {"id": 8,"name": "D. Rice","pos": "M","grid": "3:1"}},
+            {"player": {"id": 9,"name": "L. Trossard","pos": "F","grid": "4:3"}},
+            {"player": {"id": 10,"name": "K. Havertz","pos": "F","grid": "4:2"}},
+            {"player": {"id": 11,"name": "Gabriel Martinelli","pos": "F","grid": "4:1"}}
+        ],
+        "substitutes": [
+            {"player": {"id": 12,"name": "A. Ramsdale","pos": "G","grid": null}},
+            {"player": {"id": 13,"name": "J. Timber","pos": "D","grid": null}},
+            {"player": {"id": 14,"name": "O. Zinchenko","pos": "D","grid": null}},
+            {"player": {"id": 15,"name": "Jorginho","pos": "M","grid": null}},
+            {"player": {"id": 16,"name": "F. Vieira","pos": "M","grid": null}},
+            {"player": {"id": 17,"name": "E. Smith Rowe","pos": "M","grid": null}},
+            {"player": {"id": 18,"name": "Gabriel Jesus","pos": "F","grid": null}},
+            {"player": {"id": 19,"name": "E. Nketiah","pos": "F","grid": null}},
+            {"player": {"id": 20,"name": "R. Nelson","pos": "F","grid": null}}
+        ]
+      },
+      {
+        "team": { "id": 45, "name": "Everton", "logo": "https://media.api-sports.io/football/teams/45.png", "winner": false },
+        "formation": "4-5-1",
+        "startXI": [
+            {"player": {"id": 21,"name": "J. Pickford","pos": "G","grid": "1:1"}},
+            {"player": {"id": 22,"name": "S. Coleman","pos": "D","grid": "2:4"}},
+            {"player": {"id": 23,"name": "J. Tarkowski","pos": "D","grid": "2:3"}},
+            {"player": {"id": 24,"name": "J. Branthwaite","pos": "D","grid": "2:2"}},
+            {"player": {"id": 25,"name": "A. Young","pos": "D","grid": "2:1"}},
+            {"player": {"id": 26,"name": "J. Garner","pos": "M","grid": "3:5"}},
+            {"player": {"id": 27,"name": "I. Gueye","pos": "M","grid": "3:4"}},
+            {"player": {"id": 28,"name": "A. Onana","pos": "M","grid": "3:3"}},
+            {"player": {"id": 29,"name": "A. Gomes","pos": "M","grid": "3:2"}},
+            {"player": {"id": 30,"name": "D. McNeil","pos": "M","grid": "3:1"}},
+            {"player": {"id": 31,"name": "D. Calvert-Lewin","pos": "F","grid": "4:1"}}
+        ],
+        "substitutes": [
+            {"player": {"id": 32,"name": "João Virgínia","pos": "G","grid": null}},
+            {"player": {"id": 33,"name": "M. Keane","pos": "D","grid": null}},
+            {"player": {"id": 34,"name": "B. Godfrey","pos": "D","grid": null}},
+            {"player": {"id": 35,"name": "L. Warrington","pos": "M","grid": null}},
+            {"player": {"id": 36,"name": "M. Hunt","pos": "M","grid": null}},
+            {"player": {"id": 37,"name": "Y. Chermiti","pos": "F","grid": null}},
+            {"player": {"id": 38,"name": "Beto","pos": "F","grid": null}},
+            {"player": {"id": 39,"name": "A. Dobbin","pos": "F","grid": null}}
+        ]
+      }
+    ],
+    "statistics": [
+      {
+        "team": { "id": 42, "name": "Arsenal" },
+        "statistics": [
+          { "type": "Shots on Goal", "value": 8 },
+          { "type": "Shots off Goal", "value": 12 },
+          { "type": "Total Shots", "value": 26 },
+          { "type": "Blocked Shots", "value": 6 },
+          { "type": "Shots insidebox", "value": 20 },
+          { "type": "Shots outsidebox", "value": 6 },
+          { "type": "Fouls", "value": 8 },
+          { "type": "Corner Kicks", "value": 8 },
+          { "type": "Offsides", "value": 2 },
+          { "type": "Ball Possession", "value": "65%" },
+          { "type": "Yellow Cards", "value": 0 },
+          { "type": "Red Cards", "value": null },
+          { "type": "Goalkeeper Saves", "value": 1 },
+          { "type": "Total passes", "value": 569 },
+          { "type": "Passes accurate", "value": 499 },
+          { "type": "Passes %", "value": "88%" }
+        ]
+      },
+      {
+        "team": { "id": 45, "name": "Everton" },
+        "statistics": [
+          { "type": "Shots on Goal", "value": 2 },
+          { "type": "Shots off Goal", "value": 5 },
+          { "type": "Total Shots", "value": 10 },
+          { "type": "Blocked Shots", "value": 3 },
+          { "type": "Shots insidebox", "value": 4 },
+          { "type": "Shots outsidebox", "value": 6 },
+          { "type": "Fouls", "value": 15 },
+          { "type": "Corner Kicks", "value": 3 },
+          { "type": "Offsides", "value": 2 },
+          { "type": "Ball Possession", "value": "35%" },
+          { "type": "Yellow Cards", "value": 2 },
+          { "type": "Red Cards", "value": null },
+          { "type": "Goalkeeper Saves", "value": 6 },
+          { "type": "Total passes", "value": 303 },
+          { "type": "Passes accurate", "value": 224 },
+          { "type": "Passes %", "value": "74%" }
+        ]
+      }
+    ]
+  }
+]
