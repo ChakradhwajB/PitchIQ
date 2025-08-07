@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -59,36 +60,36 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
                     <span className="font-medium group-hover:text-primary transition-colors">{s.team.name}</span>
                   </Link>
                 </TableCell>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <TableCell className="text-center">{s.all.played}</TableCell>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Played</p></TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <TableCell className="text-center">{s.all.win}</TableCell>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Wins</p></TooltipContent>
-                </Tooltip>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <TableCell className="text-center">{s.all.draw}</TableCell>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Draws</p></TooltipContent>
-                </Tooltip>
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <TableCell className="text-center">{s.all.lose}</TableCell>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Losses</p></TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <TableCell className="text-center">{s.goalsDiff}</TableCell>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Goal Difference</p></TooltipContent>
-                </Tooltip>
+                <TableCell className="text-center">
+                    <Tooltip>
+                        <TooltipTrigger>{s.all.played}</TooltipTrigger>
+                        <TooltipContent><p>Played</p></TooltipContent>
+                    </Tooltip>
+                </TableCell>
+                <TableCell className="text-center">
+                    <Tooltip>
+                        <TooltipTrigger>{s.all.win}</TooltipTrigger>
+                        <TooltipContent><p>Wins</p></TooltipContent>
+                    </Tooltip>
+                </TableCell>
+                 <TableCell className="text-center">
+                    <Tooltip>
+                        <TooltipTrigger>{s.all.draw}</TooltipTrigger>
+                        <TooltipContent><p>Draws</p></TooltipContent>
+                    </Tooltip>
+                </TableCell>
+                 <TableCell className="text-center">
+                    <Tooltip>
+                        <TooltipTrigger>{s.all.lose}</TooltipTrigger>
+                        <TooltipContent><p>Losses</p></TooltipContent>
+                    </Tooltip>
+                </TableCell>
+                <TableCell className="text-center">
+                    <Tooltip>
+                        <TooltipTrigger>{s.goalsDiff}</TooltipTrigger>
+                        <TooltipContent><p>Goal Difference</p></TooltipContent>
+                    </Tooltip>
+                </TableCell>
                 <TableCell className="text-center font-bold">{s.points}</TableCell>
                 <TableCell className="text-right pr-4">
                   <FormGuide form={s.form} />
