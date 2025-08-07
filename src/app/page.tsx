@@ -9,11 +9,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getStandings, getLeagues, getSeasons } from '@/lib/api';
-import type { Standing, League, Season } from '@/lib/types';
+import { getStandings, getLeagues, getSeasons, getFixturesByStage } from '@/lib/api';
+import type { Standing, League, Season, Fixture } from '@/lib/types';
 import StandingsTable from '@/components/standings-table';
 import TeamPointsChart from '@/components/team-points-chart';
 import { Skeleton } from '@/components/ui/skeleton';
+import FixtureList from '@/components/fixture-list';
+
+const TOURNAMENT_LEAGUE_IDS = [2, 3]; // UCL, UEL
+
+const TOURNAMENT_STAGES = [
+  'Group Stage',
+  'Round of 16',
+  'Quarter-finals',
+  'Semi-finals',
+  'Final',
+];
 
 export default function Home() {
   const [leagues, setLeagues] = React.useState<League[]>([]);
@@ -21,29 +32,45 @@ export default function Home() {
   const [selectedLeague, setSelectedLeague] = React.useState<string>('39');
   const [selectedSeason, setSelectedSeason] = React.useState<string>('2023');
   const [standings, setStandings] = React.useState<Standing[][]>([]);
+  const [fixtures, setFixtures] = React.useState<Fixture[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [selectedStage, setSelectedStage] = React.useState<string>(TOURNAMENT_STAGES[0]);
+
+  const isTournament = TOURNAMENT_LEAGUE_IDS.includes(parseInt(selectedLeague));
 
   React.useEffect(() => {
     async function fetchInitialData() {
-        setLoading(true);
-        const [leaguesData, seasonsData] = await Promise.all([getLeagues(), getSeasons()]);
-        setLeagues(leaguesData);
-        setSeasons(seasonsData);
-        setLoading(false);
+      setLoading(true);
+      const [leaguesData, seasonsData] = await Promise.all([getLeagues(), getSeasons()]);
+      setLeagues(leaguesData);
+      setSeasons(seasonsData.sort((a,b) => b.year - a.year));
+      if (seasonsData.length > 0) {
+        setSelectedSeason(seasonsData.find(s => s.year === 2023)?.year.toString() || seasonsData[0].year.toString());
+      }
+      setLoading(false);
     }
     fetchInitialData();
   }, []);
 
   React.useEffect(() => {
-    async function fetchStandings() {
+    async function fetchData() {
         if (!selectedLeague || !selectedSeason) return;
         setLoading(true);
-        const standingsData = await getStandings(selectedLeague, selectedSeason);
-        setStandings(standingsData);
+
+        if (isTournament) {
+            setStandings([]);
+            const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(' ', '-'));
+            setFixtures(fixturesData);
+        } else {
+            setFixtures([]);
+            const standingsData = await getStandings(selectedLeague, selectedSeason);
+            setStandings(standingsData);
+        }
+
         setLoading(false);
     }
-    fetchStandings();
-  }, [selectedLeague, selectedSeason]);
+    fetchData();
+  }, [selectedLeague, selectedSeason, selectedStage, isTournament]);
   
   const handleLeagueChange = (leagueId: string) => {
     setSelectedLeague(leagueId);
@@ -53,6 +80,10 @@ export default function Home() {
     setSelectedSeason(seasonYear);
   };
 
+  const handleStageChange = (stage: string) => {
+    setSelectedStage(stage);
+  }
+
   const selectedLeagueName = leagues.find(l => l.id.toString() === selectedLeague)?.name || 'League';
   const isGroupStage = standings.length > 1;
 
@@ -60,10 +91,10 @@ export default function Home() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
         <h1 className="text-4xl font-headline font-bold text-foreground">
-          {selectedLeagueName} Standings
+          {selectedLeagueName} {isTournament ? selectedStage : 'Standings'}
         </h1>
         <div className="flex gap-4">
-          <Select onValueChange={handleLeagueChange} defaultValue={selectedLeague}>
+          <Select onValueChange={handleLeagueChange} value={selectedLeague}>
             <SelectTrigger className="w-[180px] font-body">
               <SelectValue placeholder="Select League" />
             </SelectTrigger>
@@ -75,7 +106,7 @@ export default function Home() {
               ))}
             </SelectContent>
           </Select>
-          <Select onValueChange={handleSeasonChange} defaultValue={selectedSeason}>
+          <Select onValueChange={handleSeasonChange} value={selectedSeason}>
             <SelectTrigger className="w-[180px] font-body">
               <SelectValue placeholder="Select Season" />
             </SelectTrigger>
@@ -87,6 +118,20 @@ export default function Home() {
               ))}
             </SelectContent>
           </Select>
+          {isTournament && (
+            <Select onValueChange={handleStageChange} value={selectedStage}>
+                <SelectTrigger className="w-[180px] font-body">
+                    <SelectValue placeholder="Select Stage" />
+                </SelectTrigger>
+                <SelectContent>
+                    {TOURNAMENT_STAGES.map((stage) => (
+                        <SelectItem key={stage} value={stage}>
+                            {stage}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 
@@ -95,7 +140,9 @@ export default function Home() {
           {loading ? (
              <Card className="shadow-lg rounded-xl">
                 <CardHeader>
-                  <CardTitle className="font-headline text-2xl">League Table</CardTitle>
+                  <CardTitle className="font-headline text-2xl">
+                    <Skeleton className="h-8 w-1/2" />
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -107,6 +154,15 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
+          ) : isTournament ? (
+            <Card className="shadow-lg rounded-xl">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">Fixtures</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FixtureList fixtures={fixtures} />
+              </CardContent>
+            </Card>
           ) : standings.length > 0 ? (
             standings.map((group, index) => (
               <Card key={index} className="shadow-lg rounded-xl">
@@ -126,12 +182,12 @@ export default function Home() {
                   <CardTitle className="font-headline text-2xl">No Data</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>No standings available for the selected league and season.</p>
+                  <p>No data available for the selected league and season.</p>
                 </CardContent>
               </Card>
           )}
         </div>
-        {!isGroupStage && (
+        {!isGroupStage && !isTournament && (
           <div>
             <Card className="shadow-lg rounded-xl">
               <CardHeader>

@@ -1,4 +1,5 @@
-import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats } from './types';
+import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats, Fixture } from './types';
+import standingsData from './mock-data/standings.json';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
@@ -55,25 +56,29 @@ export async function getSeasons(): Promise<Season[]> {
     { year: 2023 },
     { year: 2022 },
     { year: 2021 },
-  ].sort((a,b) => b.year - a.year);
+  ];
 }
 
 export async function getStandings(leagueId: string, season: string): Promise<Standing[][]> {
-  const data = await fetchFromApi<any[]>(`standings?league=${leagueId}&season=${season}`);
-  if (!data || !data[0]?.league?.standings) return [];
+  // The free tier is very restrictive, so we use mock data for stability.
+  console.warn("Standings data is mocked to ensure stability on the free API plan.");
+  return standingsData[0].league.standings as Standing[][];
+
+  // const data = await fetchFromApi<any[]>(`standings?league=${leagueId}&season=${season}`);
+  // if (!data || !data[0]?.league?.standings) return [];
   
-  // The API returns an array of standings arrays (for leagues with groups)
-  return data[0].league.standings.map((group: any[]) => {
-    return group.map((s: any) => ({
-      rank: s.rank,
-      team: { id: s.team.id, name: s.team.name, logo: s.team.logo },
-      points: s.points,
-      goalsDiff: s.goalsDiff,
-      form: s.form,
-      all: s.all,
-      group: s.group,
-    }));
-  });
+  // // The API returns an array of standings arrays (for leagues with groups)
+  // return data[0].league.standings.map((group: any[]) => {
+  //   return group.map((s: any) => ({
+  //     rank: s.rank,
+  //     team: { id: s.team.id, name: s.team.name, logo: s.team.logo },
+  //     points: s.points,
+  //     goalsDiff: s.goalsDiff,
+  //     form: s.form,
+  //     all: s.all,
+  //     group: s.group,
+  //   }));
+  // });
 }
 
 export async function getTeam(teamId: string): Promise<Team | undefined> {
@@ -213,4 +218,17 @@ export async function getPlayerHeatmap(playerId: string): Promise<HeatmapPoint[]
         });
     }
     return points;
+}
+
+export async function getFixturesByStage(leagueId: string, season: string, round: string): Promise<Fixture[]> {
+    const data = await fetchFromApi<any[]>(`fixtures?league=${leagueId}&season=${season}&round=${round}`);
+    if (!data) return [];
+
+    return data.map((f: any) => ({
+        id: f.fixture.id,
+        date: f.fixture.date,
+        status: f.fixture.status.long,
+        teams: f.teams,
+        goals: f.goals,
+    }));
 }

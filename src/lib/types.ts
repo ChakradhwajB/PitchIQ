@@ -150,3 +150,17 @@ export interface HeatmapPoint {
   x: number;
   y: number;
 }
+
+export interface Fixture {
+    id: number;
+    date: string;
+    status: string;
+    teams: {
+      home: MatchTeam;
+      away: MatchTeam;
+    };
+    goals: {
+      home: number | null;
+      away: number | null;
+    };
+}
