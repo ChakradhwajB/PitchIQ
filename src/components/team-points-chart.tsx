@@ -12,15 +12,15 @@ interface TeamPointsChartProps {
 const chartConfig = {
   win: {
     label: "Wins",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(var(--chart-5))", // Green
   },
   draw: {
     label: "Draws",
-    color: "hsl(var(--chart-4))",
+    color: "hsl(var(--chart-4))", // Orange
   },
   lose: {
     label: "Losses",
-    color: "hsl(var(--chart-5))",
+    color: "hsl(var(--chart-2))", // Red
   },
 } satisfies ChartConfig
 
@@ -54,7 +54,7 @@ export default function TeamPointsChart({ standings }: TeamPointsChartProps) {
                     cursor={{ fill: 'hsl(var(--accent))' }}
                     content={<ChartTooltipContent hideLabel />}
                 />
-                <Bar dataKey="win" stackId="a" fill="var(--color-win)" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="win" stackId="a" fill="var(--color-win)" radius={[4, 0, 0, 4]} />
                 <Bar dataKey="draw" stackId="a" fill="var(--color-draw)" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="lose" stackId="a" fill="var(--color-lose)" radius={[0, 4, 4, 0]} />
             </BarChart>
