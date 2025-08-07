@@ -39,7 +39,7 @@ export default function Home() {
   React.useEffect(() => {
     async function fetchInitialData() {
       setLoading(true);
-      const [leaguesData] = await Promise.all([getLeagues()]);
+      const leaguesData = await getLeagues();
       setLeagues(leaguesData);
       // As per API limitations, we will use a fixed list of recent, valid seasons.
       const availableSeasons = [
@@ -70,7 +70,7 @@ export default function Home() {
             const standingsData = await getStandings(selectedLeague, selectedSeason);
             setStandings(standingsData);
         } else { // This is a tournament knockout stage
-            const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(' ', '-'));
+            const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(/ /g, '-'));
             setFixtures(fixturesData);
         }
 
@@ -189,10 +189,10 @@ export default function Home() {
           ) : (
              <Card className="shadow-lg rounded-xl">
                 <CardHeader>
-                  <CardTitle className="font-headline text-2xl">No Data</CardTitle>
+                  <CardTitle className="font-headline text-2xl">No Data Available</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>No data available for the selected league, season, and stage.</p>
+                  <p>There is no data available for the selected league, season, and stage. Please try a different selection.</p>
                 </CardContent>
               </Card>
           )}

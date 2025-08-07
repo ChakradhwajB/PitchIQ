@@ -1,5 +1,4 @@
 import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats, Fixture } from './types';
-import standingsData from './mock-data/standings.json';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
@@ -60,25 +59,11 @@ export async function getSeasons(): Promise<Season[]> {
 }
 
 export async function getStandings(leagueId: string, season: string): Promise<Standing[][]> {
-  // The free tier is very restrictive, so we use mock data for stability.
-  console.warn("Standings data is mocked to ensure stability on the free API plan.");
-  return standingsData[0].league.standings as Standing[][];
-
-  // const data = await fetchFromApi<any[]>(`standings?league=${leagueId}&season=${season}`);
-  // if (!data || !data[0]?.league?.standings) return [];
+  const data = await fetchFromApi<any[]>(`standings?league=${leagueId}&season=${season}`);
+  if (!data || !data[0]?.league?.standings) return [];
   
-  // // The API returns an array of standings arrays (for leagues with groups)
-  // return data[0].league.standings.map((group: any[]) => {
-  //   return group.map((s: any) => ({
-  //     rank: s.rank,
-  //     team: { id: s.team.id, name: s.team.name, logo: s.team.logo },
-  //     points: s.points,
-  //     goalsDiff: s.goalsDiff,
-  //     form: s.form,
-  //     all: s.all,
-  //     group: s.group,
-  //   }));
-  // });
+  // The API returns an array of standings arrays (for leagues with groups)
+  return data[0].league.standings;
 }
 
 export async function getTeam(teamId: string): Promise<Team | undefined> {
