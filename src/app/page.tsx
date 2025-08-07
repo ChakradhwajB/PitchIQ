@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getStandings, getLeagues, getSeasons, getFixturesByStage } from '@/lib/api';
+import { getStandings, getLeagues, getFixturesByStage } from '@/lib/api';
 import type { Standing, League, Season, Fixture } from '@/lib/types';
 import StandingsTable from '@/components/standings-table';
 import TeamPointsChart from '@/components/team-points-chart';
@@ -36,52 +36,53 @@ export default function Home() {
   const [loading, setLoading] = React.useState(true);
   const [selectedStage, setSelectedStage] = React.useState<string>(TOURNAMENT_STAGES[0]);
 
-  const isTournament = TOURNAMENT_LEAGUE_IDS.includes(parseInt(selectedLeague));
-  const showStandingsForTournament = isTournament && selectedStage === 'Group Stage';
-
   React.useEffect(() => {
     async function fetchInitialData() {
       setLoading(true);
-      const [leaguesData, seasonsData] = await Promise.all([getLeagues(), getSeasons()]);
+      const [leaguesData] = await Promise.all([getLeagues()]);
       setLeagues(leaguesData);
-      const sortedSeasons = seasonsData.sort((a,b) => b.year - a.year);
-      setSeasons(sortedSeasons);
-      if (sortedSeasons.length > 0) {
-        setSelectedSeason(sortedSeasons.find(s => s.year === 2023)?.year.toString() || sortedSeasons[0].year.toString());
-      }
+      // As per API limitations, we will use a fixed list of recent, valid seasons.
+      const availableSeasons = [
+          { year: 2023 },
+          { year: 2022 },
+          { year: 2021 },
+          { year: 2024 },
+          { year: 2025 },
+      ].sort((a,b) => b.year - a.year);
+      setSeasons(availableSeasons);
+      setSelectedSeason('2023');
       setLoading(false);
     }
     fetchInitialData();
   }, []);
 
+  const isTournament = TOURNAMENT_LEAGUE_IDS.includes(parseInt(selectedLeague));
+  const showStandings = !isTournament || (isTournament && selectedStage === 'Group Stage');
+
   React.useEffect(() => {
     async function fetchData() {
         if (!selectedLeague || !selectedSeason) return;
         setLoading(true);
+        setStandings([]);
+        setFixtures([]);
 
-        if (isTournament) {
-             if (showStandingsForTournament) {
-                setFixtures([]);
-                const standingsData = await getStandings(selectedLeague, selectedSeason);
-                setStandings(standingsData);
-             } else {
-                setStandings([]);
-                const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(' ', '-'));
-                setFixtures(fixturesData);
-             }
-        } else {
-            setFixtures([]);
+        if (showStandings) {
             const standingsData = await getStandings(selectedLeague, selectedSeason);
             setStandings(standingsData);
+        } else { // This is a tournament knockout stage
+            const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(' ', '-'));
+            setFixtures(fixturesData);
         }
 
         setLoading(false);
     }
     fetchData();
-  }, [selectedLeague, selectedSeason, selectedStage, isTournament, showStandingsForTournament]);
+  }, [selectedLeague, selectedSeason, selectedStage, showStandings]);
   
   const handleLeagueChange = (leagueId: string) => {
     setSelectedLeague(leagueId);
+    // Reset stage to default when changing league
+    setSelectedStage(TOURNAMENT_STAGES[0]);
   };
   
   const handleSeasonChange = (seasonYear: string) => {
@@ -94,7 +95,7 @@ export default function Home() {
 
   const selectedLeagueName = leagues.find(l => l.id.toString() === selectedLeague)?.name || 'League';
   const isGroupStage = standings.length > 1;
-  const showFixtures = isTournament && !showStandingsForTournament;
+  const showFixtures = isTournament && !showStandings;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -191,7 +192,7 @@ export default function Home() {
                   <CardTitle className="font-headline text-2xl">No Data</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>No data available for the selected league and season.</p>
+                  <p>No data available for the selected league, season, and stage.</p>
                 </CardContent>
               </Card>
           )}
