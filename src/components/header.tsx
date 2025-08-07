@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu, Footprints } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function Header() {
   const navLinks = [
-    { href: '/', label: 'Standings' },
-    { href: '#', label: 'Matches' },
-    { href: '#', label: 'Players' },
-    { href: '#', label: 'News' },
+    { href: '/', label: 'Standings', disabled: false },
+    { href: '#', label: 'Matches', disabled: true },
+    { href: '#', label: 'Players', disabled: true },
+    { href: '#', label: 'News', disabled: true },
   ];
 
   return (
@@ -24,8 +25,13 @@ export function Header() {
           {navLinks.map((link) => (
             <Link
               key={link.label}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              href={link.disabled ? '#' : link.href}
+              className={cn(
+                "text-sm font-medium text-muted-foreground transition-colors hover:text-primary",
+                link.disabled && "pointer-events-none opacity-50"
+              )}
+              aria-disabled={link.disabled}
+              tabIndex={link.disabled ? -1 : undefined}
             >
               {link.label}
             </Link>
@@ -57,8 +63,13 @@ export function Header() {
                   {navLinks.map((link) => (
                     <Link
                       key={link.label}
-                      href={link.href}
-                      className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                      href={link.disabled ? '#' : link.href}
+                      className={cn(
+                        "text-lg font-medium text-foreground transition-colors hover:text-primary",
+                         link.disabled && "pointer-events-none opacity-50"
+                      )}
+                       aria-disabled={link.disabled}
+                       tabIndex={link.disabled ? -1 : undefined}
                     >
                       {link.label}
                     </Link>
