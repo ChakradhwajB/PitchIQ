@@ -1,0 +1,81 @@
+
+[
+  {
+    "team": {
+      "id": 42,
+      "name": "Arsenal",
+      "country": "England",
+      "logo": "https://media.api-sports.io/football/teams/42.png"
+    },
+    "venue": {
+      "id": 494,
+      "name": "Emirates Stadium",
+      "city": "London"
+    }
+  },
+  {
+    "team": {
+      "id": 50,
+      "name": "Manchester City",
+      "country": "England",
+      "logo": "https://media.api-sports.io/football/teams/50.png"
+    },
+    "venue": {
+      "id": 555,
+      "name": "Etihad Stadium",
+      "city": "Manchester"
+    }
+  },
+  {
+    "team": {
+      "id": 40,
+      "name": "Liverpool",
+      "country": "England",
+      "logo": "https://media.api-sports.io/football/teams/40.png"
+    },
+    "venue": {
+      "id": 550,
+      "name": "Anfield",
+      "city": "Liverpool"
+    }
+  },
+  {
+    "team": {
+      "id": 66,
+      "name": "Aston Villa",
+      "country": "England",
+      "logo": "https://media.api-sports.io/football/teams/66.png"
+    },
+    "venue": {
+      "id": 495,
+      "name": "Villa Park",
+      "city": "Birmingham"
+    }
+  },
+  {
+    "team": {
+      "id": 47,
+      "name": "Tottenham",
+      "country": "England",
+      "logo": "https://media.api-sports.io/football/teams/47.png"
+    },
+    "venue": {
+      "id": 593,
+      "name": "Tottenham Hotspur Stadium",
+      "city": "London"
+    }
+  },
+  {
+    "team": {
+      "id": 45,
+      "name": "Everton",
+      "country": "England",
+      "logo": "https://media.api-sports.io/football/teams/45.png"
+    },
+    "venue": {
+      "id": 531,
+      "name": "Goodison Park",
+      "city": "Liverpool"
+    }
+  }
+]
