@@ -2,12 +2,19 @@
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import type { Standing } from '@/lib/types';
-import { ChartTooltipContent, ChartTooltip } from '@/components/ui/chart';
+import { ChartTooltipContent, ChartContainer, type ChartConfig } from '@/components/ui/chart';
 
 
 interface TeamPointsChartProps {
   standings: Standing[];
 }
+
+const chartConfig = {
+  points: {
+    label: "Points",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig
 
 export default function TeamPointsChart({ standings }: TeamPointsChartProps) {
   const chartData = standings
@@ -20,6 +27,7 @@ export default function TeamPointsChart({ standings }: TeamPointsChartProps) {
 
   return (
     <div className="h-[400px] w-full">
+       <ChartContainer config={chartConfig} className="h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical" margin={{ left: 25, right: 10 }}>
                 <XAxis type="number" hide />
@@ -35,9 +43,10 @@ export default function TeamPointsChart({ standings }: TeamPointsChartProps) {
                     cursor={{ fill: 'hsl(var(--accent))' }}
                     content={<ChartTooltipContent />}
                 />
-                <Bar dataKey="points" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="points" fill="var(--color-points)" radius={[0, 4, 4, 0]} />
             </BarChart>
         </ResponsiveContainer>
+       </ChartContainer>
     </div>
   );
 }
