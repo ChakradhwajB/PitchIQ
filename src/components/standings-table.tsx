@@ -62,31 +62,31 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
                 </TableCell>
                 <TableCell className="text-center">
                     <Tooltip>
-                        <TooltipTrigger>{s.all.played}</TooltipTrigger>
+                        <TooltipTrigger asChild><span>{s.all.played}</span></TooltipTrigger>
                         <TooltipContent><p>Played</p></TooltipContent>
                     </Tooltip>
                 </TableCell>
                 <TableCell className="text-center">
                     <Tooltip>
-                        <TooltipTrigger>{s.all.win}</TooltipTrigger>
+                        <TooltipTrigger asChild><span>{s.all.win}</span></TooltipTrigger>
                         <TooltipContent><p>Wins</p></TooltipContent>
                     </Tooltip>
                 </TableCell>
                  <TableCell className="text-center">
                     <Tooltip>
-                        <TooltipTrigger>{s.all.draw}</TooltipTrigger>
+                        <TooltipTrigger asChild><span>{s.all.draw}</span></TooltipTrigger>
                         <TooltipContent><p>Draws</p></TooltipContent>
                     </Tooltip>
                 </TableCell>
                  <TableCell className="text-center">
                     <Tooltip>
-                        <TooltipTrigger>{s.all.lose}</TooltipTrigger>
+                        <TooltipTrigger asChild><span>{s.all.lose}</span></TooltipTrigger>
                         <TooltipContent><p>Losses</p></TooltipContent>
                     </Tooltip>
                 </TableCell>
                 <TableCell className="text-center">
                     <Tooltip>
-                        <TooltipTrigger>{s.goalsDiff}</TooltipTrigger>
+                        <TooltipTrigger asChild><span>{s.goalsDiff}</span></TooltipTrigger>
                         <TooltipContent><p>Goal Difference</p></TooltipContent>
                     </Tooltip>
                 </TableCell>

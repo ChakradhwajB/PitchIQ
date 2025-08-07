@@ -20,7 +20,7 @@ export default function Home() {
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [selectedLeague, setSelectedLeague] = React.useState<string>('39');
   const [selectedSeason, setSelectedSeason] = React.useState<string>('2023');
-  const [standings, setStandings] = React.useState<Standing[]>([]);
+  const [standings, setStandings] = React.useState<Standing[][]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -54,6 +54,7 @@ export default function Home() {
   };
 
   const selectedLeagueName = leagues.find(l => l.id.toString() === selectedLeague)?.name || 'League';
+  const isGroupStage = standings.length > 1;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -90,40 +91,62 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Card className="shadow-lg rounded-xl">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">League Table</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ) : (
-                <StandingsTable standings={standings} />
-              )}
-            </CardContent>
-          </Card>
+        <div className="lg:col-span-2 space-y-8">
+          {loading ? (
+             <Card className="shadow-lg rounded-xl">
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl">League Table</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                </CardContent>
+              </Card>
+          ) : standings.length > 0 ? (
+            standings.map((group, index) => (
+              <Card key={index} className="shadow-lg rounded-xl">
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl">
+                    {group[0]?.group || 'League Table'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <StandingsTable standings={group} />
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+             <Card className="shadow-lg rounded-xl">
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl">No Data</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>No standings available for the selected league and season.</p>
+                </CardContent>
+              </Card>
+          )}
         </div>
-        <div>
-          <Card className="shadow-lg rounded-xl">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Team Points</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <Skeleton className="h-[400px] w-full" />
-              ) : (
-                <TeamPointsChart standings={standings} />
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {!isGroupStage && (
+          <div>
+            <Card className="shadow-lg rounded-xl">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">Team Points</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-[400px] w-full" />
+                ) : (
+                  <TeamPointsChart standings={standings.flat()} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

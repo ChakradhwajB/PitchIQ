@@ -58,17 +58,22 @@ export async function getSeasons(): Promise<Season[]> {
   ].sort((a,b) => b.year - a.year);
 }
 
-export async function getStandings(leagueId: string, season: string): Promise<Standing[]> {
+export async function getStandings(leagueId: string, season: string): Promise<Standing[][]> {
   const data = await fetchFromApi<any[]>(`standings?league=${leagueId}&season=${season}`);
-  if (!data || !data[0]?.league?.standings?.[0]) return [];
-  return data[0].league.standings[0].map((s: any) => ({
-    rank: s.rank,
-    team: { id: s.team.id, name: s.team.name, logo: s.team.logo },
-    points: s.points,
-    goalsDiff: s.goalsDiff,
-    form: s.form,
-    all: s.all
-  }));
+  if (!data || !data[0]?.league?.standings) return [];
+  
+  // The API returns an array of standings arrays (for leagues with groups)
+  return data[0].league.standings.map((group: any[]) => {
+    return group.map((s: any) => ({
+      rank: s.rank,
+      team: { id: s.team.id, name: s.team.name, logo: s.team.logo },
+      points: s.points,
+      goalsDiff: s.goalsDiff,
+      form: s.form,
+      all: s.all,
+      group: s.group,
+    }));
+  });
 }
 
 export async function getTeam(teamId: string): Promise<Team | undefined> {

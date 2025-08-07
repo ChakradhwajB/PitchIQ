@@ -22,6 +22,7 @@ export interface Standing {
   points: number;
   goalsDiff: number;
   form: string;
+  group: string;
   all: {
     played: number;
     win: number;
