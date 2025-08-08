@@ -12,23 +12,9 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { Home, Globe, Users, BarChart, Calendar, Trophy, Shield, Target, Plus, Minus, AlertTriangle } from 'lucide-react';
+import { Home, Globe, Users, BarChart, Calendar, Trophy, Shield, Target, Plus, Minus, AlertTriangle, BookOpen } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-async function StatCard({ icon: Icon, title, value, color }: { icon: React.ElementType, title: string, value: string | number, color?: string }) {
-    return (
-        <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-                <Icon className={`h-5 w-5 ${color || 'text-muted-foreground'}`} />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
-            </CardContent>
-        </Card>
-    );
-}
 
 export default async function TeamPage({ params, searchParams }: { params: { id: string }, searchParams: { name: string } }) {
   // We use the name from searchParams for fetching, as it's more reliable with the new API endpoint.
@@ -52,12 +38,6 @@ export default async function TeamPage({ params, searchParams }: { params: { id:
     getTeamFixtures(teamId)
   ]);
 
-  const keyStats = {
-    goalsScored: 'N/A', 
-    goalsConceded: 'N/A',
-    avgPossession: "N/A",
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Team Header */}
@@ -79,16 +59,20 @@ export default async function TeamPage({ params, searchParams }: { params: { id:
         </div>
       </div>
 
-      {/* Key Stats */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-headline font-semibold mb-4">Season Snapshot</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon={Target} title="Goals Scored" value={keyStats.goalsScored} color="text-green-500" />
-            <StatCard icon={Shield} title="Goals Conceded" value={keyStats.goalsConceded} color="text-red-500" />
-            <StatCard icon={BarChart} title="Average Possession" value={keyStats.avgPossession} color="text-blue-500" />
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">Note: Detailed season stats are not available in the new API.</p>
-      </div>
+      {/* Description */}
+      {teamData.description && (
+        <Card className="mb-8 shadow-lg rounded-xl">
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                    <BookOpen />
+                    About {teamData.name}
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                <p>{teamData.description}</p>
+            </CardContent>
+        </Card>
+      )}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Squad List */}

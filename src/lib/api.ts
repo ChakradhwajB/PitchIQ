@@ -141,6 +141,7 @@ export async function getTeam(teamName: string): Promise<Team | undefined> {
         logo: cleanImageUrl(teamData.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
+        description: teamData.strDescriptionEN,
     };
 }
 

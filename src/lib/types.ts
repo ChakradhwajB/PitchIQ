@@ -14,6 +14,7 @@ export interface Team {
   logo: string;
   stadium?: string;
   country?: string;
+  description?: string;
 }
 
 export interface Standing {
