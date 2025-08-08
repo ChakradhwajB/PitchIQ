@@ -73,7 +73,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: t.strTeamBadge ? `${t.strTeamBadge}/preview` : PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: t.strTeamBadge || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -103,7 +103,7 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: teamData.strTeamBadge ? `${teamData.strTeamBadge}/preview` : PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: teamData.strTeamBadge || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
     };
