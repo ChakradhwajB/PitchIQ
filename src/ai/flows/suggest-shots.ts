@@ -44,7 +44,6 @@ const aIShotOutputSchema = z.object({
 
 const prompt = ai.definePrompt({
   name: 'suggestShotsPrompt',
-  model: 'gemma-3-1b-it',
   input: {schema: SuggestShotsInputSchema},
   output: {schema: aIShotOutputSchema }, // The AI's output is now a simple list of strings.
   prompt: `You are an AI assistant that creates plausible shot map data for a soccer match based on its statistics.

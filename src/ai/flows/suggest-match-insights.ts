@@ -27,7 +27,6 @@ export async function suggestMatchInsights(input: SuggestMatchInsightsInput): Pr
 
 const prompt = ai.definePrompt({
   name: 'suggestMatchInsightsPrompt',
-  model: 'gemma-3-1b-it',
   input: {schema: SuggestMatchInsightsInputSchema},
   output: {schema: SuggestMatchInsightsOutputSchema},
   prompt: `You are an AI assistant that analyzes soccer match statistics and provides key insights and talking points.
