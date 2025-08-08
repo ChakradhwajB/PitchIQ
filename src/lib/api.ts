@@ -176,7 +176,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
 
     const statistics: PlayerStats[] = currentTeam ? [{
         team: currentTeam,
-        league: { id: leagueId, name: leagueName, logo: leagueId !== '0' ? cleanImageUrl((await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`))?.leagues?.[0]?.strBadge) : undefined },
+        league: { id: leagueId, name: leagueName, logo: leagueId !== '0' ? cleanImageUrl((await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`))?.leagues?.[0]?.strBadge) || undefined : undefined },
         games: { appearences: p.intSigned, minutes: 0, position: p.strPosition }, // Mocked/approximated data
         goals: { total: p.intGoals, assists: p.intAssists },
     }] : [];
@@ -386,7 +386,6 @@ export async function getFixturesByStage(leagueId: string, season: string, round
 }
 
 export async function getFixturesByDate(date: string): Promise<Fixture[]> {
-    // TheSportsDB API is limited for this. We'll try fetching for a major league.
     const data = await fetchFromApi<{events: any[]}>(`eventsday.php?d=${date}&s=Soccer`);
     if (!data || !data.events) return [];
 
