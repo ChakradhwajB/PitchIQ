@@ -10,11 +10,12 @@ const PLACEHOLDER_TEAM_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/pl
 
 // Helper to clean up image URLs from TheSportsDB
 function cleanImageUrl(url: string | null | undefined): string {
-    if (!url) return '';
+    if (!url || typeof url !== 'string') return '';
     // The API sometimes returns URLs with /preview appended, which is not a direct image link.
     if (url.endsWith('/preview')) {
         return url.slice(0, -8); 
     }
+    // If the url is valid and doesn't have /preview, just return it.
     return url;
 }
 
