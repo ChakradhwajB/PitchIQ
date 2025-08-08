@@ -73,6 +73,17 @@ export async function getSeasons(): Promise<Season[]> {
     { year: "2023-2024" },
     { "year": "2022-2023" },
     { "year": "2021-2022" },
+    { year: "2020-2021" },
+    { year: "2019-2020" },
+    { year: "2018-2019" },
+    { year: "2017-2018" },
+    { year: "2016-2017" },
+    { year: "2015-2016" },
+    { year: "2014-2015" },
+    { year: "2013-2014" },
+    { year: "2012-2013" },
+    { year: "2011-2012" },
+    { year: "2010-2011" },
   ];
 }
 
@@ -122,20 +133,25 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
 }
 
 export async function getTeamPlayers(teamId: string): Promise<Player[]> {
-    const data = await fetchFromApi<{player: any[]}>(`lookup_all_players.php?id=${teamId}`);
+    const team = await getTeam(teamId);
+    if (!team) return [];
+
+    const data = await fetchFromApi<{player: any[]}>(`searchplayers.php?t=${encodeURIComponent(team.name)}`);
     if (!data || !data.player) return [];
   
-    return data.player.map((p: any) => ({
-      id: p.idPlayer,
-      name: p.strPlayer,
-      age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
-      nationality: p.strNationality,
-      photo: cleanImageUrl(p.strCutout) || cleanImageUrl(p.strThumb) || PLACEHOLDER_IMAGE_URL,
-      position: p.strPosition,
-      statistics: [], // Full stats would require more calls
-      height: p.strHeight,
-      weight: p.strWeight,
-    }));
+    return data.player
+      .filter(p => p.strSport === 'Soccer' && p.idTeam === teamId)
+      .map((p: any) => ({
+        id: p.idPlayer,
+        name: p.strPlayer,
+        age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
+        nationality: p.strNationality,
+        photo: cleanImageUrl(p.strCutout) || cleanImageUrl(p.strThumb) || PLACEHOLDER_IMAGE_URL,
+        position: p.strPosition,
+        statistics: [], // Full stats would require more calls
+        height: p.strHeight,
+        weight: p.strWeight,
+      }));
 }
 
 export async function getPlayer(playerId: string): Promise<Player | undefined> {
