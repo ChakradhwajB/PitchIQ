@@ -48,7 +48,7 @@ export default function StandingsTable({ standings }: StandingsTableProps) {
               <TableRow key={s.team.id}>
                 <TableCell className="text-center font-medium text-muted-foreground">{s.rank}</TableCell>
                 <TableCell>
-                  <Link href={`/team/${s.team.id}`} className="flex items-center gap-3 group">
+                  <Link href={`/team/${s.team.id}?name=${encodeURIComponent(s.team.name)}`} className="flex items-center gap-3 group">
                     <Image
                       src={s.team.logo}
                       alt={`${s.team.name} logo`}

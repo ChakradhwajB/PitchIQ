@@ -30,16 +30,26 @@ async function StatCard({ icon: Icon, title, value, color }: { icon: React.Eleme
     );
 }
 
-export default async function TeamPage({ params }: { params: { id: string } }) {
-  const teamData = await getTeam(params.id);
+export default async function TeamPage({ params, searchParams }: { params: { id: string }, searchParams: { name: string } }) {
+  // We use the name from searchParams for fetching, as it's more reliable with the new API endpoint.
+  const teamName = searchParams.name;
+
+  if (!teamName) {
+    notFound();
+  }
+
+  const teamData = await getTeam(teamName);
   
   if (!teamData) {
     notFound();
   }
   
+  // Use the reliable ID from the fetched teamData for subsequent calls.
+  const teamId = teamData.id;
+  
   const [players, fixtures] = await Promise.all([
-    getTeamPlayers(params.id),
-    getTeamFixtures(params.id)
+    getTeamPlayers(teamId),
+    getTeamFixtures(teamId)
   ]);
 
   const keyStats = {

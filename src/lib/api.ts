@@ -104,7 +104,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: cleanImageUrl(t.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -127,14 +127,18 @@ export async function getStandings(leagueId: string, season: string): Promise<St
   return [standings];
 }
 
-export async function getTeam(teamId: string): Promise<Team | undefined> {
-    const data = await fetchFromApi<{teams: any[]}>(`lookupteam.php?id=${teamId}`);
+export async function getTeam(teamName: string): Promise<Team | undefined> {
+    const data = await fetchFromApi<{teams: any[]}>(`searchteams.php?t=${encodeURIComponent(teamName)}`);
     if (!data || !data.teams || data.teams.length === 0) return undefined;
-    const teamData = data.teams[0];
+    
+    // Find the exact match, as search can return multiple results
+    const teamData = data.teams.find(t => t.strTeam.toLowerCase() === teamName.toLowerCase());
+    if (!teamData) return undefined;
+    
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: cleanImageUrl(teamData.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: cleanImageUrl(teamData.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
     };
@@ -163,7 +167,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
     if (!data || !data.players) return undefined;
 
     const p = data.players[0];
-    const currentTeam = p.idTeam ? await getTeam(p.idTeam) : undefined;
+    const currentTeam = p.idTeam ? await getTeam(p.strTeam) : undefined;
     
     // TheSportsDB has multiple league fields, let's try to find the most relevant one
     const leagueName = p.strLeague2 || p.strLeague || 'Unknown League';
@@ -207,9 +211,10 @@ export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
     const fixtures = await Promise.all(data.results.map(async (f:any) => {
         const isHome = f.idHomeTeam === teamId;
         const opponentId = isHome ? f.idAwayTeam : f.idHomeTeam;
+        const opponentTeamName = isHome ? f.strAwayTeam : f.strHomeTeam;
         
         // Fetch opponent's logo
-        const opponentTeamData = await getTeam(opponentId);
+        const opponentTeamData = await getTeam(opponentTeamName);
 
         let result: 'W' | 'D' | 'L' | null = null;
         if(f.intHomeScore !== null && f.intAwayScore !== null) {
@@ -229,7 +234,7 @@ export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
             type: 'Result',
             opponent: { 
                 id: opponentId, 
-                name: isHome ? f.strAwayTeam : f.strHomeTeam, 
+                name: opponentTeamName, 
                 logo: opponentTeamData?.logo || PLACEHOLDER_TEAM_IMAGE_URL 
             },
             date: new Date(`${f.dateEvent}T${f.strTime ?? '00:00:00'}`).toISOString(),
@@ -247,8 +252,8 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   const matchData = data.events[0];
 
   const [homeTeam, awayTeam] = await Promise.all([
-    getTeam(matchData.idHomeTeam),
-    getTeam(matchData.idAwayTeam)
+    getTeam(matchData.strHomeTeam),
+    getTeam(matchData.strAwayTeam)
   ]);
   
   if (!homeTeam || !awayTeam) return undefined;
@@ -359,8 +364,8 @@ export async function getFixturesByStage(leagueId: string, season: string, round
     if (!data || !data.events) return [];
     
     const fixtures = await Promise.all(data.events.map(async (f: any) => {
-        const homeTeam = await getTeam(f.idHomeTeam);
-        const awayTeam = await getTeam(f.idAwayTeam);
+        const homeTeam = await getTeam(f.strHomeTeam);
+        const awayTeam = await getTeam(f.strAwayTeam);
 
         return {
             id: f.idEvent,
@@ -386,8 +391,8 @@ export async function getFixturesByDate(date: string): Promise<Fixture[]> {
     if (!data || !data.events) return [];
 
     const fixtures = await Promise.all(data.events.map(async (f: any) => {
-        const homeTeam = await getTeam(f.idHomeTeam);
-        const awayTeam = await getTeam(f.idAwayTeam);
+        const homeTeam = await getTeam(f.strHomeTeam);
+        const awayTeam = await getTeam(f.strAwayTeam);
 
         return {
             id: f.idEvent,
