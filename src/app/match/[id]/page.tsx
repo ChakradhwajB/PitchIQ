@@ -3,12 +3,13 @@ import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer }
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
-import { Clock, Goal, Replace, Square } from 'lucide-react';
+import { Clock, Goal, Replace, Square, Users } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import SmartHighlights from '@/components/smart-highlights';
 import ShotMap from '@/components/shot-map';
 import Link from 'next/link';
+import LineupDiagram from '@/components/lineup-diagram';
 
 function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: number | null }) {
     return (
@@ -20,31 +21,19 @@ function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: 
     )
 }
 
-function LineupDisplay({ lineup }: { lineup?: Lineup }) {
+function SubstitutesList({ lineup }: { lineup?: Lineup }) {
     if (!lineup) return null;
 
-    const PlayerRow = ({ player }: { player: { player: LineupPlayer } }) => (
-         <li>
-            <Link href={`/player/${player.player.id}`} className="hover:text-primary transition-colors group">
-                <span className="text-muted-foreground">{player.player.pos}</span>{' '}
-                <span className="group-hover:underline">{player.player.name}</span>
-            </Link>
-        </li>
-    );
-
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-lg font-headline">{lineup.team.name} ({lineup.formation})</CardTitle>
+        <Card className="shadow-none">
+             <CardHeader>
+                <CardTitle className="text-lg font-headline flex items-center gap-2">
+                    <Users className="w-5 h-5"/>
+                    Substitutes
+                </CardTitle>
             </CardHeader>
             <CardContent>
-                <h4 className="font-semibold mb-2">Starting XI</h4>
-                <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-4">
-                    {lineup.startXI.map(p => <PlayerRow key={p.player.id} player={p} />)}
-                </ul>
-                <Separator className="my-2"/>
-                <h4 className="font-semibold mb-2">Substitutes</h4>
-                <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm text-muted-foreground">
                      {lineup.substitutes.map(p => (
                         <li key={p.player.id}>
                             <Link href={`/player/${p.player.id}`} className="hover:text-primary transition-colors hover:underline">
@@ -55,7 +44,7 @@ function LineupDisplay({ lineup }: { lineup?: Lineup }) {
                 </ul>
             </CardContent>
         </Card>
-    )
+    );
 }
 
 function StatsTable({ stats, homeTeamId, awayTeamId }: { stats: MatchStats[], homeTeamId: number, awayTeamId: number }) {
@@ -173,6 +162,9 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
     notFound();
   }
 
+  const homeLineup = match.lineups.find(l => l.team.id === match.teams.home.id);
+  const awayLineup = match.lineups.find(l => l.team.id === match.teams.away.id);
+
   return (
     <div className="container mx-auto px-4 py-8">
         {/* Score Header */}
@@ -193,6 +185,15 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
         {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
+                 {/* Lineups */}
+                 <Card>
+                    <CardHeader><CardTitle className="font-headline text-xl">Lineups</CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {homeLineup && <LineupDiagram lineup={homeLineup} />}
+                        {awayLineup && <LineupDiagram lineup={awayLineup} />}
+                    </CardContent>
+                </Card>
+
                 {/* Timeline */}
                  <Card>
                     <CardHeader><CardTitle className="font-headline text-xl">Match Timeline</CardTitle></CardHeader>
@@ -217,12 +218,12 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
             </div>
         </div>
 
-        {/* Lineups */}
+        {/* Substitutes */}
         <Card className="mt-8">
-            <CardHeader><CardTitle className="font-headline text-2xl">Lineups</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="font-headline text-2xl">Substitutes</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <LineupDisplay lineup={match.lineups.find(l => l.team.id === match.teams.home.id)} />
-                <LineupDisplay lineup={match.lineups.find(l => l.team.id === match.teams.away.id)} />
+                <SubstitutesList lineup={homeLineup} />
+                <SubstitutesList lineup={awayLineup} />
             </CardContent>
         </Card>
     </div>

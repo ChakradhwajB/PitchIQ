@@ -51,8 +51,8 @@ const PitchSVG = () => (
 
 export default function ShotMap({ shots, homeTeamId, awayTeamId }: ShotMapProps) {
   return (
-    <div className="relative w-full aspect-[105/68]">
-      <TooltipProvider>
+    <TooltipProvider>
+      <div className="relative w-full aspect-[105/68]">
         <div className="absolute inset-0">
           <PitchSVG />
         </div>
@@ -60,13 +60,15 @@ export default function ShotMap({ shots, homeTeamId, awayTeamId }: ShotMapProps)
           {shots.map((shot, index) => (
             <Tooltip key={index}>
               <TooltipTrigger asChild>
-                <circle
-                  cx={shot.x}
-                  cy={shot.y}
-                  r="1.5"
-                  className={`${shotColors[shot.type]} opacity-80 hover:opacity-100 transition-opacity cursor-pointer transform hover:scale-125`}
-                  strokeWidth="0.3"
-                />
+                <g>
+                  <circle
+                    cx={shot.x}
+                    cy={shot.y}
+                    r="1.5"
+                    className={`${shotColors[shot.type]} opacity-80 hover:opacity-100 transition-opacity cursor-pointer transform hover:scale-125`}
+                    strokeWidth="0.3"
+                  />
+                </g>
               </TooltipTrigger>
               <TooltipContent>
                  <Link href={`/player/${shot.player.id}`} className="font-bold hover:text-primary transition-colors hover:underline">
@@ -78,7 +80,7 @@ export default function ShotMap({ shots, homeTeamId, awayTeamId }: ShotMapProps)
             </Tooltip>
           ))}
         </svg>
-      </TooltipProvider>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
