@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Standing } from '@/lib/types';
@@ -41,7 +42,9 @@ export default function TeamComparisonTable({ currentStandings, previousStanding
     prevStandingsMap.set(s.team.id, s.points);
   });
 
-  const comparisonData: ComparisonData[] = currentStandings
+  const topThreeStandings = currentStandings.filter(s => s.rank <= 3);
+
+  const comparisonData: ComparisonData[] = topThreeStandings
     .map(current => {
       const previousPoints = prevStandingsMap.get(current.team.id) ?? null;
       return {
@@ -51,8 +54,8 @@ export default function TeamComparisonTable({ currentStandings, previousStanding
         difference: previousPoints !== null ? current.points - previousPoints : null,
       };
     })
-    .filter(data => data.previousPoints !== null) // Only include teams present in both seasons
-    .sort((a, b) => (b.difference ?? -Infinity) - (a.difference ?? -Infinity)); // Sort by biggest improvers
+    .filter(data => data.previousPoints !== null); // Only include teams present in both seasons
+    // Keep original rank order, no need to sort by difference
 
 
   if (comparisonData.length === 0) {
@@ -71,7 +74,7 @@ export default function TeamComparisonTable({ currentStandings, previousStanding
   return (
     <Card className="shadow-lg rounded-xl">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Year-over-Year</CardTitle>
+        <CardTitle className="font-headline text-2xl">Top 3 Year-over-Year</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
