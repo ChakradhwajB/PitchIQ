@@ -141,9 +141,21 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
 }
 
 export async function getTeamPlayers(teamId: string): Promise<Player[]> {
-    // TheSportsDB's lookup_all_players.php endpoint is not reliable.
-    // Returning an empty array until a better solution is found.
-    return [];
+    const data = await fetchFromApi<{player: any[]}>(`lookup_all_players.php?id=${teamId}`);
+    if (!data || !data.player) return [];
+
+    return data.player.map((p: any) => ({
+      id: p.idPlayer,
+      name: p.strPlayer,
+      age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
+      nationality: p.strNationality,
+      height: p.strHeight,
+      weight: p.strWeight,
+      photo: cleanImageUrl(p.strCutout) || cleanImageUrl(p.strThumb) || PLACEHOLDER_IMAGE_URL,
+      position: p.strPosition,
+      statistics: [], // Full stats would be another API call per player
+      career: [], // Not provided in this endpoint
+    }));
 }
 
 export async function getPlayer(playerId: string): Promise<Player | undefined> {

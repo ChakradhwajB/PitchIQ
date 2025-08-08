@@ -119,7 +119,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                             <AlertTriangle className="h-4 w-4" />
                             <AlertTitle>Squad Information Unavailable</AlertTitle>
                             <AlertDescription>
-                                We're currently unable to retrieve the squad list for this team due to an issue with our data provider. Please check back later.
+                                We're currently unable to retrieve the squad list for this team due to limitations with our data provider. Please check back later.
                             </AlertDescription>
                         </Alert>
                     )}
