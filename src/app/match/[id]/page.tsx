@@ -3,7 +3,7 @@ import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer }
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
-import { Clock, Goal, Replace, Square, Users } from 'lucide-react';
+import { Clock, Goal, Replace, Square, Users, Trophy } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import SmartHighlights from '@/components/smart-highlights';
@@ -146,14 +146,13 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: nu
 }
 
 export default async function MatchPage({ params }: { params: { id: string } }) {
-  const [match, shots] = await Promise.all([
-    getMatch(params.id),
-    getMatchShots(params.id)
-  ]);
+  const match = await getMatch(params.id);
 
   if (!match) {
     notFound();
   }
+  
+  const shots = await getMatchShots(JSON.stringify(match));
 
   const homeLineup = match.lineups.find(l => l.team.id === match.teams.home.id);
   const awayLineup = match.lineups.find(l => l.team.id === match.teams.away.id);
@@ -212,8 +211,8 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                     <CardContent>
                        <ShotMap 
                          shots={shots} 
-                         homeTeam={{id: match.teams.home.id, name: match.teams.home.name}}
-                         awayTeam={{id: match.teams.away.id, name: match.teams.away.name}}
+                         homeTeam={match.teams.home}
+                         awayTeam={match.teams.away}
                         />
                     </CardContent>
                 </Card>

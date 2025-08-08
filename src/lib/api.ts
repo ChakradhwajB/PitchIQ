@@ -1,4 +1,5 @@
 import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats, Fixture, Lineup } from './types';
+import { suggestShots } from '@/ai/flows/suggest-shots';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
@@ -176,20 +177,18 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   } as Match;
 }
 
-export async function getMatchShots(matchId: string): Promise<Shot[]> {
-    // API-Football does not have a direct shot map endpoint.
-    // We will continue to use mock data for this specific visualization.
-    console.warn("Shot map data is mocked as API-Football does not provide it.");
-    const shots: Shot[] = [
-        { x: 85, y: 34, teamId: 529, type: 'Goal', player: { id: 278, name: 'Lamine Yamal' } },
-        { x: 92, y: 45, teamId: 529, type: 'Saved', player: { id: 9, name: 'Raphinha' } },
-        { x: 78, y: 20, teamId: 529, type: 'Miss', player: { id: 6, name: 'Gundogan' } },
-        { x: 20, y: 30, teamId: 727, type: 'Goal', player: { id: 19184, name: 'A. Budimir' } },
-        { x: 15, y: 40, teamId: 727, type: 'Miss', player: { id: 24, name: 'Raul Garcia' } },
-        { x: 88, y: 38, teamId: 529, type: 'Goal', player: { id: 15352, name: 'R. Lewandowski' } },
-    ];
-    return shots.filter(shot => shot.x > 0 && shot.x < 105 && shot.y > 0 && shot.y < 68);
+export async function getMatchShots(matchStatistics: string): Promise<Shot[]> {
+    try {
+        const result = await suggestShots({ matchStatistics });
+        if (result.shots) {
+            return result.shots;
+        }
+    } catch (e) {
+        console.error('Failed to generate shots from AI, returning empty array.', e);
+    }
+    return [];
 }
+
 
 export async function getPlayerHeatmap(playerId: string): Promise<HeatmapPoint[]> {
     // API-Football does not have a direct heatmap endpoint.

@@ -1,26 +1,20 @@
 
 'use client';
 
-import type { Shot } from '@/lib/types';
+import type { Shot, MatchTeam } from '@/lib/types';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface ShotMapProps {
   shots: Shot[];
-  homeTeam: { id: number; name: string };
-  awayTeam: { id: number; name: string };
+  homeTeam: MatchTeam;
+  awayTeam: MatchTeam;
 }
 
-const shotColors: { [key: string]: { [key: string]: string } } = {
-  home: {
-    'Goal': 'fill-green-500 stroke-white',
-    'Saved': 'fill-yellow-400 stroke-white',
-    'Miss': 'fill-red-500 stroke-white',
-  },
-  away: {
-    'Goal': 'fill-green-500 stroke-black',
-    'Saved': 'fill-yellow-400 stroke-black',
-    'Miss': 'fill-red-500 stroke-black',
-  }
+const shotColors: { [key: string]: string } = {
+    'Goal': 'fill-green-500',
+    'Saved': 'fill-yellow-400',
+    'Miss': 'fill-red-500',
 };
 
 const PitchSVG = () => (
@@ -60,30 +54,27 @@ export default function ShotMap({ shots, homeTeam, awayTeam }: ShotMapProps) {
         </div>
         <svg viewBox="0 0 105 68" className="absolute inset-0 w-full h-full">
           {shots.map((shot, index) => {
-            const teamType = shot.teamId === homeTeam.id ? 'home' : 'away';
+            const isHomeShot = shot.teamId === homeTeam.id;
             return (
                 <g key={index}>
-                <circle
-                    cx={shot.x}
-                    cy={shot.y}
-                    r="1.5"
-                    className={`${shotColors[teamType][shot.type]} opacity-90`}
-                    strokeWidth="0.3"
-                />
+                    <circle
+                        cx={shot.x}
+                        cy={shot.y}
+                        r="2.5"
+                        className={`${shotColors[shot.type]} opacity-80 stroke-white`}
+                        strokeWidth="0.3"
+                    />
+                    <image
+                        href={isHomeShot ? homeTeam.logo : awayTeam.logo}
+                        x={shot.x - 1}
+                        y={shot.y - 1}
+                        height="2"
+                        width="2"
+                    />
                 </g>
             )
           })}
         </svg>
-      </div>
-      <div className="mt-4 flex justify-center gap-6 text-sm text-muted-foreground">
-          <div className='flex items-center gap-2'>
-            <div className='w-3 h-3 rounded-full' style={{backgroundColor: 'white'}} />
-            <span>{homeTeam.name}</span>
-          </div>
-          <div className='flex items-center gap-2'>
-            <div className='w-3 h-3 rounded-full' style={{backgroundColor: 'black'}}/>
-            <span>{awayTeam.name}</span>
-          </div>
       </div>
        <div className="mt-4 flex justify-center gap-6 text-sm text-muted-foreground">
           <div className='flex items-center gap-2'>
