@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -92,10 +93,15 @@ export default function Home() {
             const standingsData = await getStandings(selectedLeague, selectedSeason);
             setStandings(standingsData);
 
-            const seasonYears = selectedSeason.split('-').map(Number);
-            const prevSeasonYear = `${seasonYears[0] - 1}-${seasonYears[1] - 1}`;
-            const prevStandingsData = await getStandings(selectedLeague, prevSeasonYear);
-            setPreviousStandings(prevStandingsData);
+            if (selectedSeason) {
+                const seasonYears = selectedSeason.split('-').map(Number);
+                if (seasonYears.length === 2 && !isNaN(seasonYears[0]) && !isNaN(seasonYears[1])) {
+                    const prevSeasonYear = `${seasonYears[0] - 1}-${seasonYears[1] - 1}`;
+                    const prevStandingsData = await getStandings(selectedLeague, prevSeasonYear);
+                    setPreviousStandings(prevStandingsData);
+                }
+            }
+
 
         } else { // This is a tournament knockout stage
             const round = STAGE_TO_ROUND_MAP[selectedStage] || '1'; // Default to something
