@@ -13,7 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-function-formatDateForApi(date: Date) {
+function formatDateForApi(date: Date) {
   return format(date, 'yyyy-MM-dd');
 }
 
