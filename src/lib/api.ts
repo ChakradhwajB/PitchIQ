@@ -8,6 +8,17 @@ const PLACEHOLDER_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/placeho
 const PLACEHOLDER_TEAM_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/placeholders/team_placeholder.png';
 
 
+// Helper to clean up image URLs from TheSportsDB
+function cleanImageUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    // The API sometimes returns URLs with /preview appended, which is not a direct image link.
+    if (url.endsWith('/preview')) {
+        return url.slice(0, -8); 
+    }
+    return url;
+}
+
+
 // Helper function to make API calls
 async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
   if (!API_KEY) {
@@ -73,7 +84,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: t.strTeamBadge || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -103,7 +114,7 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: teamData.strTeamBadge || PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: cleanImageUrl(teamData.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
     };
@@ -118,7 +129,7 @@ export async function getTeamPlayers(teamId: string): Promise<Player[]> {
       name: p.strPlayer,
       age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
       nationality: p.strNationality,
-      photo: p.strCutout || p.strThumb || PLACEHOLDER_IMAGE_URL,
+      photo: cleanImageUrl(p.strCutout) || cleanImageUrl(p.strThumb) || PLACEHOLDER_IMAGE_URL,
       position: p.strPosition,
       statistics: [], // Full stats would require more calls
       height: p.strHeight,
@@ -139,7 +150,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
 
     const statistics: PlayerStats[] = currentTeam ? [{
         team: currentTeam,
-        league: { id: leagueId, name: leagueName, logo: leagueId !== '0' ? (await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`))?.leagues?.[0]?.strBadge : undefined },
+        league: { id: leagueId, name: leagueName, logo: leagueId !== '0' ? cleanImageUrl((await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`))?.leagues?.[0]?.strBadge) : undefined },
         games: { appearences: p.intSigned, minutes: 0, position: p.strPosition }, // Mocked/approximated data
         goals: { total: p.intGoals, assists: p.intAssists },
     }] : [];
@@ -161,7 +172,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
         nationality: p.strNationality,
         height: p.strHeight,
         weight: p.strWeight,
-        photo: p.strCutout || p.strThumb || PLACEHOLDER_IMAGE_URL,
+        photo: cleanImageUrl(p.strCutout) || cleanImageUrl(p.strThumb) || PLACEHOLDER_IMAGE_URL,
         position: p.strPosition,
         statistics: statistics,
         career: career,
@@ -385,7 +396,7 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
     name: p.strPlayer,
     age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
     nationality: p.strNationality,
-    photo: p.strCutout || p.strThumb || PLACEHOLDER_IMAGE_URL,
+    photo: cleanImageUrl(p.strCutout) || cleanImageUrl(p.strThumb) || PLACEHOLDER_IMAGE_URL,
     position: p.strPosition,
     statistics: [], // Full stats can be fetched on the player page
   }));
