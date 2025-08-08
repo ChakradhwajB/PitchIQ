@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 export function Header() {
   const navLinks = [
     { href: '/', label: 'Standings', disabled: false },
-    { href: '#', label: 'Matches', disabled: true },
+    { href: '/', label: 'Matches', disabled: false },
     { href: '#', label: 'Players', disabled: true },
     { href: '#', label: 'News', disabled: true },
   ];
