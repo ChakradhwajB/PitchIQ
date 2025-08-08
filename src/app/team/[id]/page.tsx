@@ -12,8 +12,9 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { Home, Globe, Users, BarChart, Calendar, Trophy, Shield, Target, Plus, Minus } from 'lucide-react';
+import { Home, Globe, Users, BarChart, Calendar, Trophy, Shield, Target, Plus, Minus, AlertTriangle } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 async function StatCard({ icon: Icon, title, value, color }: { icon: React.ElementType, title: string, value: string | number, color?: string }) {
     return (
@@ -87,31 +88,41 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                     <CardTitle className="font-headline text-2xl flex items-center gap-2"><Users /> Current Squad</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Player</TableHead>
-                                <TableHead>Position</TableHead>
-                                <TableHead>Nationality</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {players.map((player: Player) => (
-                                <TableRow key={player.id}>
-                                    <TableCell>
-                                        <Link href={`/player/${player.id}`} className="flex items-center gap-3 group">
-                                             <Image src={player.photo} alt={player.name} width={32} height={32} className="rounded-full object-cover transition-transform group-hover:scale-110 bg-muted" data-ai-hint="player photo" />
-                                            <span className="font-medium group-hover:text-primary">{player.name}</span>
-                                        </Link>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary">{player.position}</Badge>
-                                    </TableCell>
-                                    <TableCell>{player.nationality}</TableCell>
+                    {players.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Player</TableHead>
+                                    <TableHead>Position</TableHead>
+                                    <TableHead>Nationality</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {players.map((player: Player) => (
+                                    <TableRow key={player.id}>
+                                        <TableCell>
+                                            <Link href={`/player/${player.id}`} className="flex items-center gap-3 group">
+                                                 <Image src={player.photo} alt={player.name} width={32} height={32} className="rounded-full object-cover transition-transform group-hover:scale-110 bg-muted" data-ai-hint="player photo" />
+                                                <span className="font-medium group-hover:text-primary">{player.name}</span>
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="secondary">{player.position}</Badge>
+                                        </TableCell>
+                                        <TableCell>{player.nationality}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                         <Alert variant="default">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Squad Information Unavailable</AlertTitle>
+                            <AlertDescription>
+                                We're currently unable to retrieve the squad list for this team due to an issue with our data provider. Please check back later.
+                            </AlertDescription>
+                        </Alert>
+                    )}
                 </CardContent>
             </Card>
         </div>
