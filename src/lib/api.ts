@@ -181,12 +181,12 @@ export async function getMatchShots(matchId: string): Promise<Shot[]> {
     // We will continue to use mock data for this specific visualization.
     console.warn("Shot map data is mocked as API-Football does not provide it.");
     const shots: Shot[] = [
-        { x: 85, y: 34, teamId: 42, type: 'Goal', player: { id: 278, name: 'K. Havertz' } },
-        { x: 92, y: 45, teamId: 42, type: 'Saved', player: { id: 9, name: 'L. Trossard' } },
-        { x: 78, y: 20, teamId: 42, type: 'Miss', player: { id: 6, name: 'M. Ødegaard' } },
-        { x: 20, y: 30, teamId: 45, type: 'Goal', player: { id: 19184, name: 'I. Gueye' } },
-        { x: 15, y: 40, teamId: 45, type: 'Miss', player: { id: 24, name: 'D. Calvert-Lewin' } },
-        { x: 88, y: 38, teamId: 42, type: 'Goal', player: { id: 15352, name: 'T. Tomiyasu' } },
+        { x: 85, y: 34, teamId: 529, type: 'Goal', player: { id: 278, name: 'Lamine Yamal' } },
+        { x: 92, y: 45, teamId: 529, type: 'Saved', player: { id: 9, name: 'Raphinha' } },
+        { x: 78, y: 20, teamId: 529, type: 'Miss', player: { id: 6, name: 'Gundogan' } },
+        { x: 20, y: 30, teamId: 727, type: 'Goal', player: { id: 19184, name: 'A. Budimir' } },
+        { x: 15, y: 40, teamId: 727, type: 'Miss', player: { id: 24, name: 'Raul Garcia' } },
+        { x: 88, y: 38, teamId: 529, type: 'Goal', player: { id: 15352, name: 'R. Lewandowski' } },
     ];
     return shots.filter(shot => shot.x > 0 && shot.x < 105 && shot.y > 0 && shot.y < 68);
 }
@@ -216,4 +216,33 @@ export async function getFixturesByStage(leagueId: string, season: string, round
         teams: f.teams,
         goals: f.goals,
     }));
+}
+
+export async function getFixturesByDate(date: string): Promise<Fixture[]> {
+    const data = await fetchFromApi<any[]>(`fixtures?date=${date}&status=NS-FT`);
+    if (!data) return [];
+
+    return data.map((f: any) => ({
+        id: f.fixture.id,
+        date: f.fixture.date,
+        status: f.fixture.status.long,
+        teams: f.teams,
+        goals: f.goals,
+    }));
+}
+
+export async function searchPlayersByName(name: string): Promise<Player[]> {
+  const season = 2023; // Use a recent season for better results
+  const data = await fetchFromApi<any[]>(`players?search=${name}&season=${season}`);
+  if (!data) return [];
+
+  return data.map((p: any) => ({
+    id: p.player.id,
+    name: p.player.name,
+    age: p.player.age,
+    nationality: p.player.nationality,
+    photo: p.player.photo,
+    position: p.statistics[0]?.games.position ?? 'Unknown',
+    statistics: [], // Full stats can be fetched on the player page
+  }));
 }
