@@ -23,11 +23,11 @@ export default function FixtureList({ fixtures }: FixtureListProps) {
                            <div className="flex flex-col items-end gap-2">
                                <div className="flex items-center gap-2">
                                    <span className="font-medium text-right w-32 truncate">{fixture.teams.home.name}</span>
-                                   <Image src={fixture.teams.home.logo || 'https://placehold.co/24x24.png'} alt={fixture.teams.home.name} width={24} height={24} data-ai-hint="team logo" />
+                                   <Image src={fixture.teams.home.logo} alt={fixture.teams.home.name} width={24} height={24} data-ai-hint="team logo" />
                                </div>
                                <div className="flex items-center gap-2">
                                    <span className="font-medium text-right w-32 truncate">{fixture.teams.away.name}</span>
-                                   <Image src={fixture.teams.away.logo || 'https://placehold.co/24x24.png'} alt={fixture.teams.away.name} width={24} height={24} data-ai-hint="team logo" />
+                                   <Image src={fixture.teams.away.logo} alt={fixture.teams.away.name} width={24} height={24} data-ai-hint="team logo" />
                                </div>
                            </div>
                            <div className="flex flex-col items-center border-l border-r px-4">
@@ -45,3 +45,5 @@ export default function FixtureList({ fixtures }: FixtureListProps) {
         </div>
     )
 }
+
+    

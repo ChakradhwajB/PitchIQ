@@ -3,6 +3,9 @@ import { suggestShots } from '@/ai/flows/suggest-shots';
 
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 const API_KEY = process.env.NEXT_PUBLIC_THESPORTSDB_API_KEY;
+const PLACEHOLDER_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/placeholders/player_placeholder.png';
+const PLACEHOLDER_TEAM_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/placeholders/team_placeholder.png';
+
 
 // Helper function to make API calls
 async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
@@ -69,7 +72,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: t.strTeamBadge + '/preview',
+          logo: t.strTeamBadge ? t.strTeamBadge + '/preview' : PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -99,7 +102,7 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: teamData.strTeamBadge + '/preview',
+        logo: teamData.strTeamBadge ? teamData.strTeamBadge + '/preview' : PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
     };
@@ -112,9 +115,9 @@ export async function getTeamPlayers(teamId: string): Promise<Player[]> {
     return data.player.map((p: any) => ({
       id: p.idPlayer,
       name: p.strPlayer,
-      age: new Date().getFullYear() - new Date(p.dateBorn).getFullYear(),
+      age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
       nationality: p.strNationality,
-      photo: p.strCutout || p.strThumb || 'https://placehold.co/150x150.png',
+      photo: p.strCutout || p.strThumb || PLACEHOLDER_IMAGE_URL,
       position: p.strPosition,
       statistics: [], // Full stats would require more calls
       height: p.strHeight,
@@ -127,24 +130,36 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
     if (!data || !data.players) return undefined;
 
     const p = data.players[0];
-    const currentTeam = await getTeam(p.idTeam);
+    const currentTeam = p.idTeam ? await getTeam(p.idTeam) : undefined;
+    
+    // TheSportsDB has multiple league fields, let's try to find the most relevant one
+    const leagueName = p.strLeague2 || p.strLeague || 'Unknown League';
+    const leagueId = p.idLeague2 || p.idLeague || '0';
+
+    const statistics = currentTeam ? [{
+        team: currentTeam,
+        league: { id: leagueId, name: leagueName, logo: leagueId !== '0' ? (await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`))?.leagues?.[0]?.strBadge : undefined },
+        games: { appearences: p.intSigned, minutes: 0, position: p.strPosition }, // Mocked/approximated data
+        goals: { total: p.intGoals, assists: p.intAssists },
+    }] : [];
+
+    // TheSportsDB doesn't have a clean career history endpoint. We can parse from available text fields if needed.
+    const career = [];
+    if (p.strTeam && p.dateBorn) {
+        career.push({ team: { name: p.strTeam, logo: currentTeam?.logo || '' }, start: p.dateSigned || new Date(p.dateBorn).getFullYear().toString(), end: 'Present' })
+    }
 
     return {
         id: p.idPlayer,
         name: p.strPlayer,
-        age: new Date().getFullYear() - new Date(p.dateBorn).getFullYear(),
+        age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
         nationality: p.strNationality,
         height: p.strHeight,
         weight: p.strWeight,
-        photo: p.strCutout || p.strThumb  || 'https://placehold.co/150x150.png',
+        photo: p.strCutout || p.strThumb || PLACEHOLDER_IMAGE_URL,
         position: p.strPosition,
-        statistics: currentTeam ? [{
-            team: currentTeam,
-            league: { id: p.idLeague, name: p.strLeague },
-            games: { appearences: 0, minutes: 0, position: p.strPosition }, // Mocked data
-            goals: { total: 0, assists: 0 },
-        }] : [],
-        career: [], // Not provided by this endpoint
+        statistics: statistics as PlayerStats[],
+        career: career as { team: { name: string, logo: string }, start: string, end: string | null }[],
     };
 }
 
@@ -152,17 +167,20 @@ export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
     const data = await fetchFromApi<{results: any[], events: any[]}>(`eventslast.php?id=${teamId}`);
     if (!data || !data.results) return [];
 
-    return data.results.map((f:any) => {
+    const fixtures = await Promise.all(data.results.map(async (f:any) => {
         const isHome = f.idHomeTeam === teamId;
         const opponentId = isHome ? f.idAwayTeam : f.idHomeTeam;
-        const opponentName = isHome ? f.strAwayTeam : f.strHomeTeam;
-        const score = `${f.intHomeScore}-${f.intAwayScore}`;
         
+        // Fetch opponent's logo
+        const opponentTeamData = await getTeam(opponentId);
+
         let result: 'W' | 'D' | 'L' | null = null;
-        if(f.intHomeScore !== null) {
-            if (f.intHomeScore === f.intAwayScore) {
+        if(f.intHomeScore !== null && f.intAwayScore !== null) {
+            const homeScore = parseInt(f.intHomeScore);
+            const awayScore = parseInt(f.intAwayScore);
+            if (homeScore === awayScore) {
                 result = 'D';
-            } else if ((isHome && f.intHomeScore > f.intAwayScore) || (!isHome && f.intAwayScore > f.intHomeScore)) {
+            } else if ((isHome && homeScore > awayScore) || (!isHome && awayScore > homeScore)) {
                 result = 'W';
             } else {
                 result = 'L';
@@ -172,13 +190,18 @@ export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
         return {
             id: f.idEvent,
             type: 'Result',
-            opponent: { id: opponentId, name: opponentName, logo: 'https://placehold.co/32x32' }, // Logo not in this response
-            date: new Date(`${f.dateEvent}T${f.strTime}`).toISOString(),
+            opponent: { 
+                id: opponentId, 
+                name: isHome ? f.strAwayTeam : f.strHomeTeam, 
+                logo: opponentTeamData?.logo || PLACEHOLDER_TEAM_IMAGE_URL 
+            },
+            date: new Date(`${f.dateEvent}T${f.strTime ?? '00:00:00'}`).toISOString(),
             competition: f.strLeague,
-            score,
+            score: `${f.intHomeScore}-${f.intAwayScore}`,
             result
         }
-    }).slice(-10); 
+    }));
+    return fixtures.slice(-10); 
 }
 
 export async function getMatch(matchId: string): Promise<Match | undefined> {
@@ -194,12 +217,21 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   if (!homeTeam || !awayTeam) return undefined;
 
   // TheSportsDB does not provide detailed events, lineups, or statistics in the free tier.
-  // This data will be mocked.
-  const mockLineup = {
+  // This data will be mocked or generated.
+  const mockLineupPlayer = (name: string, i: number) => ({ player: { id: `${name}-${i}`, name: `${name} ${i}`, pos: 'N/A', grid: null }});
+  
+  const homeLineup = {
       team: homeTeam,
-      formation: "4-3-3",
-      startXI: [],
-      substitutes: []
+      formation: matchData.strHomeFormation || "N/A",
+      startXI: Array(11).fill(null).map((_, i) => mockLineupPlayer('Home', i)),
+      substitutes: Array(7).fill(null).map((_, i) => mockLineupPlayer('Sub', i)),
+  };
+    
+  const awayLineup = {
+      team: awayTeam,
+      formation: matchData.strAwayFormation || "N/A",
+      startXI: Array(11).fill(null).map((_, i) => mockLineupPlayer('Away', i)),
+      substitutes: Array(7).fill(null).map((_, i) => mockLineupPlayer('Sub', i+7)),
   };
 
   const mockEvents: MatchEvent[] = [];
@@ -219,23 +251,40 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
           }
       });
   }
+
+  const statistics: MatchStats[] = [];
+  const statMapping: {[key: string]: string} = {
+      'intHomeShots': 'Total Shots',
+      'intAwayShots': 'Total Shots',
+      'intHomePossession': 'Ball Possession',
+      'intAwayPossession': 'Ball Possession'
+  };
+  const homeStats: MatchStats['statistics'] = [];
+  const awayStats: MatchStats['statistics'] = [];
+
+  if(matchData.intHomeShots) homeStats.push({ type: 'Total Shots', value: matchData.intHomeShots });
+  if(matchData.intAwayShots) awayStats.push({ type: 'Total Shots', value: matchData.intAwayShots });
+  if(matchData.intHomePossession) homeStats.push({ type: 'Ball Possession', value: `${matchData.intHomePossession}%` });
+  if(matchData.intAwayPossession) awayStats.push({ type: 'Ball Possession', value: `${matchData.intAwayPossession}%` });
+
+
+  statistics.push({ team: { id: homeTeam.id, name: homeTeam.name }, statistics: homeStats });
+  statistics.push({ team: { id: awayTeam.id, name: awayTeam.name }, statistics: awayStats });
+
   
   const fullMatchData = {
     id: matchData.idEvent,
     fixture: {
         id: matchData.idEvent,
-        date: new Date(`${matchData.dateEvent}T${matchData.strTime}`).toISOString(),
+        date: new Date(`${matchData.dateEvent}T${matchData.strTime ?? '00:00:00'}`).toISOString(),
         venue: { name: matchData.strVenue },
     },
     league: { name: matchData.strLeague, round: matchData.intRound },
     teams: { home: homeTeam, away: awayTeam },
-    goals: { home: matchData.intHomeScore, away: matchData.intAwayScore },
+    goals: { home: matchData.intHomeScore ? parseInt(matchData.intHomeScore) : null, away: matchData.intAwayScore ? parseInt(matchData.intAwayScore) : null },
     events: mockEvents,
-    lineups: [
-        {...mockLineup, team: homeTeam, formation: matchData.strHomeFormation}, 
-        {...mockLineup, team: awayTeam, formation: matchData.strAwayFormation}
-    ],
-    statistics: [], // Mocked
+    lineups: [homeLineup, awayLineup],
+    statistics: statistics,
   };
 
   // Stringify for AI flow
@@ -257,7 +306,7 @@ export async function getMatchShots(matchStatistics: string): Promise<Shot[]> {
         const result = await suggestShots({ matchStatistics });
         if (result.shots) {
             // TheSportsDB team IDs are strings
-            return result.shots.map(s => ({...s, teamId: String(s.teamId)}));
+            return result.shots.map(s => ({...s, teamId: String(s.teamId), player: {...s.player, id: String(s.player.id)} }));
         }
     } catch (e) {
         console.error('Failed to generate shots from AI, returning empty array.', e);
@@ -287,47 +336,57 @@ export async function getFixturesByStage(leagueId: string, season: string, round
 
     const data = await fetchFromApi<{events: any[]}>(`eventsround.php?id=${leagueId}&r=${roundNumber}&s=${season}`);
     if (!data || !data.events) return [];
+    
+    const fixtures = await Promise.all(data.events.map(async (f: any) => {
+        const homeTeam = await getTeam(f.idHomeTeam);
+        const awayTeam = await getTeam(f.idAwayTeam);
 
-    return data.events.map((f: any) => ({
-        id: f.idEvent,
-        date: new Date(`${f.dateEvent}T${f.strTime}`).toISOString(),
-        status: f.strStatus === "Match Finished" ? "Finished" : f.strStatus,
-        teams: {
-          home: { id: f.idHomeTeam, name: f.strHomeTeam, logo: '' }, // Logo not in this response
-          away: { id: f.idAwayTeam, name: f.strAwayTeam, logo: '' },
-        },
-        goals: {
-          home: f.intHomeScore,
-          away: f.intAwayScore,
-        },
+        return {
+            id: f.idEvent,
+            date: new Date(`${f.dateEvent}T${f.strTime ?? '00:00:00'}`).toISOString(),
+            status: f.strStatus === "Match Finished" ? "Finished" : f.strStatus,
+            teams: {
+              home: { id: f.idHomeTeam, name: f.strHomeTeam, logo: homeTeam?.logo || PLACEHOLDER_TEAM_IMAGE_URL },
+              away: { id: f.idAwayTeam, name: f.strAwayTeam, logo: awayTeam?.logo || PLACEHOLDER_TEAM_IMAGE_URL },
+            },
+            goals: {
+              home: f.intHomeScore ? parseInt(f.intHomeScore) : null,
+              away: f.intAwayScore ? parseInt(f.intAwayScore) : null,
+            },
+        }
     }));
+    return fixtures;
 }
 
 export async function getFixturesByDate(date: string): Promise<Fixture[]> {
-    // TheSportsDB doesn't have a direct "fixtures by date" for all leagues.
-    // This will be mocked for now.
-    console.warn("Fixtures by date is not fully supported by TheSportsDB API and will return limited/mocked results.");
-    // Let's try to get PL fixtures for that day
+    // TheSportsDB API is limited for this. We'll try fetching for a major league.
+    console.warn("Fixtures by date is limited and will only show Premier League results.");
     const data = await fetchFromApi<{events: any[]}>(`eventsday.php?d=${date}&l=English%20Premier%20League`);
     if (!data || !data.events) return [];
 
-    return data.events.map((f: any) => ({
-        id: f.idEvent,
-        date: new Date(`${f.dateEvent}T${f.strTime}`).toISOString(),
-        status: f.strStatus,
-        teams: {
-          home: { id: f.idHomeTeam, name: f.strHomeTeam, logo: '' }, // No logos here
-          away: { id: f.idAwayTeam, name: f.strAwayTeam, logo: '' },
-        },
-        goals: {
-          home: f.intHomeScore,
-          away: f.intAwayScore,
-        },
+    const fixtures = await Promise.all(data.events.map(async (f: any) => {
+        const homeTeam = await getTeam(f.idHomeTeam);
+        const awayTeam = await getTeam(f.idAwayTeam);
+
+        return {
+            id: f.idEvent,
+            date: new Date(`${f.dateEvent}T${f.strTime ?? '00:00:00'}`).toISOString(),
+            status: f.strStatus === "Match Finished" ? "Finished" : f.strStatus,
+            teams: {
+              home: { id: f.idHomeTeam, name: f.strHomeTeam, logo: homeTeam?.logo || PLACEHOLDER_TEAM_IMAGE_URL },
+              away: { id: f.idAwayTeam, name: f.strAwayTeam, logo: awayTeam?.logo || PLACEHOLDER_TEAM_IMAGE_URL },
+            },
+            goals: {
+              home: f.intHomeScore ? parseInt(f.intHomeScore) : null,
+              away: f.intAwayScore ? parseInt(f.intAwayScore) : null,
+            },
+        };
     }));
+    return fixtures;
 }
 
 export async function searchPlayersByName(name: string): Promise<Player[]> {
-  const data = await fetchFromApi<{player: any[]}>(`searchplayers.php?p=${name}`);
+  const data = await fetchFromApi<{player: any[]}>(`searchplayers.php?p=${encodeURIComponent(name)}`);
   if (!data || !data.player) return [];
 
   return data.player
@@ -335,10 +394,12 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
     .map((p: any) => ({
     id: p.idPlayer,
     name: p.strPlayer,
-    age: new Date().getFullYear() - new Date(p.dateBorn).getFullYear(),
+    age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
     nationality: p.strNationality,
-    photo: p.strCutout || p.strThumb || 'https://placehold.co/48x48.png',
+    photo: p.strCutout || p.strThumb || PLACEHOLDER_IMAGE_URL,
     position: p.strPosition,
     statistics: [], // Full stats can be fetched on the player page
   }));
 }
+
+    
