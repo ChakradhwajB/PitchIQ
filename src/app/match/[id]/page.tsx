@@ -1,5 +1,5 @@
 import { getMatch, getMatchShots } from '@/lib/api';
-import type { Match as MatchType, Lineup, MatchStats, MatchEvent } from '@/lib/types';
+import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer } from '@/lib/types';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import SmartHighlights from '@/components/smart-highlights';
 import ShotMap from '@/components/shot-map';
+import Link from 'next/link';
 
 function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: number | null }) {
     return (
@@ -22,6 +23,15 @@ function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: 
 function LineupDisplay({ lineup }: { lineup?: Lineup }) {
     if (!lineup) return null;
 
+    const PlayerRow = ({ player }: { player: { player: LineupPlayer } }) => (
+         <li>
+            <Link href={`/player/${player.player.id}`} className="hover:text-primary transition-colors group">
+                <span className="text-muted-foreground">{player.player.pos}</span>{' '}
+                <span className="group-hover:underline">{player.player.name}</span>
+            </Link>
+        </li>
+    );
+
     return (
         <Card>
             <CardHeader>
@@ -30,12 +40,18 @@ function LineupDisplay({ lineup }: { lineup?: Lineup }) {
             <CardContent>
                 <h4 className="font-semibold mb-2">Starting XI</h4>
                 <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mb-4">
-                    {lineup.startXI.map(p => <li key={p.player.id}><span className="text-muted-foreground">{p.player.pos}</span> {p.player.name}</li>)}
+                    {lineup.startXI.map(p => <PlayerRow key={p.player.id} player={p} />)}
                 </ul>
                 <Separator className="my-2"/>
                 <h4 className="font-semibold mb-2">Substitutes</h4>
                 <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                     {lineup.substitutes.map(p => <li key={p.player.id}>{p.player.name}</li>)}
+                     {lineup.substitutes.map(p => (
+                        <li key={p.player.id}>
+                            <Link href={`/player/${p.player.id}`} className="hover:text-primary transition-colors hover:underline">
+                                {p.player.name}
+                            </Link>
+                        </li>
+                     ))}
                 </ul>
             </CardContent>
         </Card>
@@ -103,7 +119,11 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: nu
                             <>
                                 <div className="flex-1 text-right pr-12">
                                      <div className="p-3 rounded-lg bg-card shadow-sm inline-block text-left">
-                                        <p className="font-semibold">{event.player.name}</p>
+                                        <p className="font-semibold">
+                                            <Link href={`/player/${event.player.id}`} className="hover:text-primary transition-colors hover:underline">
+                                                {event.player.name}
+                                            </Link>
+                                        </p>
                                         <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
                                         <p className="text-xs text-muted-foreground">{event.detail}</p>
                                     </div>
@@ -125,7 +145,11 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: nu
                                 </div>
                                 <div className="flex-1 pl-12">
                                     <div className="p-3 rounded-lg bg-card shadow-sm inline-block text-left">
-                                        <p className="font-semibold">{event.player.name}</p>
+                                        <p className="font-semibold">
+                                             <Link href={`/player/${event.player.id}`} className="hover:text-primary transition-colors hover:underline">
+                                                {event.player.name}
+                                            </Link>
+                                        </p>
                                         <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
                                         <p className="text-xs text-muted-foreground">{event.detail}</p>
                                     </div>

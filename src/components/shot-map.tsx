@@ -1,6 +1,7 @@
 'use client';
 
 import type { Shot } from '@/lib/types';
+import Link from 'next/link';
 import {
   Tooltip,
   TooltipContent,
@@ -68,7 +69,9 @@ export default function ShotMap({ shots, homeTeamId, awayTeamId }: ShotMapProps)
                 />
               </TooltipTrigger>
               <TooltipContent>
-                <p className="font-bold">{shot.player.name}</p>
+                 <Link href={`/player/${shot.player.id}`} className="font-bold hover:text-primary transition-colors hover:underline">
+                    {shot.player.name}
+                 </Link>
                 <p>Result: <span className="font-semibold">{shot.type}</span></p>
                 <p>Team: <span className="font-semibold">{shot.teamId === homeTeamId ? 'Home' : 'Away'}</span></p>
               </TooltipContent>
