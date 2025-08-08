@@ -1,5 +1,5 @@
 
-import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchEvent, PlayerStats } from './types';
+import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchStats, MatchEvent, LineupPlayer } from './types';
 import { suggestShots } from '@/ai/flows/suggest-shots';
 
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
@@ -141,14 +141,11 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
 }
 
 export async function getTeamPlayers(teamId: string): Promise<Player[]> {
-    const team = await getTeam(teamId);
-    if (!team) return [];
-
-    const data = await fetchFromApi<{player: any[]}>(`searchplayers.php?t=${encodeURIComponent(team.name)}`);
+    const data = await fetchFromApi<{player: any[]}>(`lookup_all_players.php?id=${teamId}`);
     if (!data || !data.player) return [];
   
     return data.player
-      .filter(p => p.strSport === 'Soccer' && p.idTeam === teamId)
+      .filter(p => p.strSport === 'Soccer')
       .map((p: any) => ({
         id: p.idPlayer,
         name: p.strPlayer,
@@ -259,7 +256,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
 
   // TheSportsDB does not provide detailed events, lineups, or statistics in the free tier.
   // This data will be mocked or generated.
-  const mockLineupPlayer = (name: string, i: number, teamId: string): LineupPlayer => ({ id: `${teamId}-${i}`, name: `${name} Player ${i}`, pos: 'N/A', grid: null });
+  const mockLineupPlayer = (name: string, i: number, teamId: string): LineupPlayer => ({ id: `${teamId}-${i}`, name: `${name} Player ${i}`, pos: 'N/A', grid: null, number: i+1 });
 
   
   const homeLineup: Lineup = {
