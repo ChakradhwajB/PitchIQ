@@ -387,8 +387,7 @@ export async function getFixturesByStage(leagueId: string, season: string, round
 
 export async function getFixturesByDate(date: string): Promise<Fixture[]> {
     // TheSportsDB API is limited for this. We'll try fetching for a major league.
-    console.warn("Fixtures by date is limited and will only show Premier League results.");
-    const data = await fetchFromApi<{events: any[]}>(`eventsday.php?d=${date}&l=English%20Premier%20League`);
+    const data = await fetchFromApi<{events: any[]}>(`eventsday.php?d=${date}`);
     if (!data || !data.events) return [];
 
     const fixtures = await Promise.all(data.events.map(async (f: any) => {
