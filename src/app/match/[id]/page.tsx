@@ -111,14 +111,14 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: nu
                                 <div className="absolute left-1/2 -translate-x-1/2 bg-background border-2 border-primary rounded-full p-1 z-10">
                                     <EventIcon event={event} />
                                 </div>
-                                <div className="flex-1 pl-12">
+                                <div className="w-1/2 pl-12 flex justify-start">
                                     <div className="font-bold text-lg w-10 text-center">{event.time.elapsed}'</div>
                                 </div>
                             </>
                         ) : (
                             <>
-                                <div className="flex-1 text-right pr-12">
-                                     <div className="font-bold text-lg w-10 text-center ml-auto">{event.time.elapsed}'</div>
+                                 <div className="w-1/2 pr-12 flex justify-end">
+                                     <div className="font-bold text-lg w-10 text-center">{event.time.elapsed}'</div>
                                 </div>
                                  <div className="absolute left-1/2 -translate-x-1/2 bg-background border-2 border-primary rounded-full p-1 z-10">
                                     <EventIcon event={event} />
@@ -197,8 +197,8 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
         <Card className="mt-8">
             <CardHeader><CardTitle className="font-headline text-2xl">Lineups</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <LineupDisplay lineup={match.lineups[0]} />
-                <LineupDisplay lineup={match.lineups[1]} />
+                <LineupDisplay lineup={match.lineups.find(l => l.team.id === match.teams.home.id)} />
+                <LineupDisplay lineup={match.lineups.find(l => l.team.id === match.teams.away.id)} />
             </CardContent>
         </Card>
     </div>
