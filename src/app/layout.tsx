@@ -19,7 +19,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'PitchIQ',
   description: 'Comprehensive soccer match statistics and visualizations.',
-  icons: [{ rel: "icon", url: "/favicon.ico" }]
 };
 
 export default function RootLayout({
