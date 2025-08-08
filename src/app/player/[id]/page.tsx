@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { notFound } from 'next/navigation';
-import { User, Flag, Calendar, BarChart, Zap, Clock, Shield, Target, Award, ArrowRightCircle } from 'lucide-react';
+import { User, Flag, Calendar, BarChart, Zap, Clock, Shield, Target, Award, ArrowRightCircle, Trophy } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PlayerHeatmap from '@/components/player-heatmap';
 
@@ -27,7 +27,11 @@ function PlayerStatBreakdown({ stats }: { stats: PlayerStats }) {
         <Card className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader>
                 <CardTitle className="font-headline text-lg flex items-center gap-2">
-                    <Image src={stats.league.logo} alt={stats.league.name} width={24} height={24} data-ai-hint="league logo"/>
+                    {stats.league.logo ? (
+                        <Image src={stats.league.logo} alt={stats.league.name} width={24} height={24} data-ai-hint="league logo"/>
+                    ) : (
+                        <Trophy className="w-6 h-6" />
+                    )}
                     {stats.league.name}
                 </CardTitle>
             </CardHeader>
