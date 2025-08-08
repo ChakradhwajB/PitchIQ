@@ -15,6 +15,7 @@ import StandingsTable from '@/components/standings-table';
 import TeamPointsChart from '@/components/team-points-chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import FixtureList from '@/components/fixture-list';
+import TeamComparisonTable from '@/components/team-comparison-table';
 
 // TheSportsDB uses league IDs that are strings.
 const TOURNAMENT_LEAGUE_IDS = ['4480', '4481']; // UCL, UEL
@@ -39,8 +40,9 @@ export default function Home() {
   const [leagues, setLeagues] = React.useState<League[]>([]);
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [selectedLeague, setSelectedLeague] = React.useState<string>('4328'); // Default to Premier League
-  const [selectedSeason, setSelectedSeason] = React.useState<string>('2024-2025');
+  const [selectedSeason, setSelectedSeason] = React.useState<string>('2023-2024');
   const [standings, setStandings] = React.useState<Standing[][]>([]);
+  const [previousStandings, setPreviousStandings] = React.useState<Standing[][]>([]);
   const [fixtures, setFixtures] = React.useState<Fixture[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedStage, setSelectedStage] = React.useState<string>(TOURNAMENT_STAGES[0]);
@@ -51,7 +53,6 @@ export default function Home() {
       const leaguesData = await getLeagues();
       setLeagues(leaguesData);
       
-      // Using static seasons as TheSportsDB API for seasons is not ideal
       const availableSeasons = [
           { year: "2024-2025" },
           { year: "2023-2024" },
@@ -70,7 +71,7 @@ export default function Home() {
           { year: "2010-2011" },
       ];
       setSeasons(availableSeasons);
-      setSelectedSeason('2024-2025');
+      setSelectedSeason('2023-2024');
       setLoading(false);
     }
     fetchInitialData();
@@ -84,11 +85,18 @@ export default function Home() {
         if (!selectedLeague || !selectedSeason) return;
         setLoading(true);
         setStandings([]);
+        setPreviousStandings([]);
         setFixtures([]);
 
         if (showStandings) {
             const standingsData = await getStandings(selectedLeague, selectedSeason);
             setStandings(standingsData);
+
+            const seasonYears = selectedSeason.split('-').map(Number);
+            const prevSeasonYear = `${seasonYears[0] - 1}-${seasonYears[1] - 1}`;
+            const prevStandingsData = await getStandings(selectedLeague, prevSeasonYear);
+            setPreviousStandings(prevStandingsData);
+
         } else { // This is a tournament knockout stage
             const round = STAGE_TO_ROUND_MAP[selectedStage] || '1'; // Default to something
             const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, round);
@@ -219,7 +227,7 @@ export default function Home() {
           )}
         </div>
         {!isGroupStage && !isTournament && (
-          <div>
+          <div className="space-y-8">
             <Card className="shadow-lg rounded-xl">
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">Team Points</CardTitle>
@@ -232,6 +240,10 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
+            <TeamComparisonTable 
+              currentStandings={standings.flat()} 
+              previousStandings={previousStandings.flat()} 
+            />
           </div>
         )}
       </div>
