@@ -39,7 +39,7 @@ export default function Home() {
   const [leagues, setLeagues] = React.useState<League[]>([]);
   const [seasons, setSeasons] = React.useState<Season[]>([]);
   const [selectedLeague, setSelectedLeague] = React.useState<string>('4328'); // Default to Premier League
-  const [selectedSeason, setSelectedSeason] = React.useState<string>('2023-2024');
+  const [selectedSeason, setSelectedSeason] = React.useState<string>('2024-2025');
   const [standings, setStandings] = React.useState<Standing[][]>([]);
   const [fixtures, setFixtures] = React.useState<Fixture[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -53,12 +53,24 @@ export default function Home() {
       
       // Using static seasons as TheSportsDB API for seasons is not ideal
       const availableSeasons = [
+          { year: "2024-2025" },
           { year: "2023-2024" },
           { year: "2022-2023" },
           { year: "2021-2022" },
+          { year: "2020-2021" },
+          { year: "2019-2020" },
+          { year: "2018-2019" },
+          { year: "2017-2018" },
+          { year: "2016-2017" },
+          { year: "2015-2016" },
+          { year: "2014-2015" },
+          { year: "2013-2014" },
+          { year: "2012-2013" },
+          { year: "2011-2012" },
+          { year: "2010-2011" },
       ];
       setSeasons(availableSeasons);
-      setSelectedSeason('2023-2024');
+      setSelectedSeason('2024-2025');
       setLoading(false);
     }
     fetchInitialData();
