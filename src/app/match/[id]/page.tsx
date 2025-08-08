@@ -210,7 +210,11 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                 <Card>
                     <CardHeader><CardTitle className="font-headline text-xl">Shot Map</CardTitle></CardHeader>
                     <CardContent>
-                       <ShotMap shots={shots} homeTeamId={match.teams.home.id} awayTeamId={match.teams.away.id} />
+                       <ShotMap 
+                         shots={shots} 
+                         homeTeam={{id: match.teams.home.id, name: match.teams.home.name}}
+                         awayTeam={{id: match.teams.away.id, name: match.teams.away.name}}
+                        />
                     </CardContent>
                 </Card>
             </div>
