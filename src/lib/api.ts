@@ -32,7 +32,15 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
       console.error(`API Error: ${response.status} ${response.statusText}`);
       return null;
     }
-    const data = await response.json();
+    
+    // Check for empty response body before parsing JSON
+    const text = await response.text();
+    if (!text) {
+        return null;
+    }
+
+    const data = JSON.parse(text);
+
     // TheSportsDB doesn't have a consistent error format, so we check for empty results.
     if (!data || (data.teams === null) || (data.leagues === null) || (data.events === null) || (data.table === null) || (data.player === null)) {
         // console.warn(`No data found for endpoint: ${endpoint}`);
