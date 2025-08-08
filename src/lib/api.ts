@@ -1,187 +1,263 @@
-import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats, Fixture, Lineup } from './types';
+import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchEvent } from './types';
 import { suggestShots } from '@/ai/flows/suggest-shots';
 
-const API_BASE_URL = 'https://v3.football.api-sports.io';
-const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
-
-const apiHeaders = {
-  "x-rapidapi-host": "v3.football.api-sports.io",
-  "x-rapidapi-key": API_KEY || '',
-};
+const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
+const API_KEY = process.env.NEXT_PUBLIC_THESPORTSDB_API_KEY;
 
 // Helper function to make API calls
 async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
   if (!API_KEY) {
-    console.error("API-Football key is missing. Add it to your .env file.");
+    console.error("TheSportsDB API key is missing. Add NEXT_PUBLIC_THESPORTSDB_API_KEY to your .env file.");
     return null;
   }
   try {
-    const response = await fetch(`${API_BASE_URL}/${endpoint}`, { headers: apiHeaders });
+    const response = await fetch(`${API_BASE_URL}/${API_KEY}/${endpoint}`);
     if (!response.ok) {
       console.error(`API Error: ${response.status} ${response.statusText}`);
       return null;
     }
     const data = await response.json();
-    if (data.errors && (Array.isArray(data.errors) ? data.errors.length > 0 : Object.keys(data.errors).length > 0)) {
-        console.error('API-Football Error:', data.errors);
-        return null;
+    // TheSportsDB doesn't have a consistent error format, so we check for empty results.
+    if (!data || (data.teams === null) || (data.leagues === null) || (data.events === null) || (data.table === null)) {
+        // console.warn(`No data found for endpoint: ${endpoint}`);
     }
-    return data.response;
+    return data;
   } catch (error) {
     console.error(`Failed to fetch from ${endpoint}`, error);
     return null;
   }
 }
 
+// NOTE: TheSportsDB has a different structure and less comprehensive free data than API-Football.
+// Some data will be mocked or simplified.
+
+const TOP_LEAGUE_IDS: {[key: string]: string} = {
+    'English Premier League': '4328',
+    'La Liga': '4335',
+    'Serie A': '4332',
+    'Bundesliga': '4331',
+    'Ligue 1': '4334',
+    'UEFA Champions League': '4480',
+    'UEFA Europa League': '4481'
+};
+const REVERSE_LEAGUE_IDS = Object.fromEntries(Object.entries(TOP_LEAGUE_IDS).map(([k, v]) => [v, k]));
+
 export async function getLeagues(): Promise<League[]> {
-  const data = await fetchFromApi<any[]>('leagues');
-  if (!data) return [];
-  // Filtering for top leagues as API returns many
-  const topLeagues = [39, 140, 135, 78, 61, 2, 3]; // PL, La Liga, Serie A, Bundesliga, Ligue 1, UCL, UEL
-  return data
-    .filter(item => topLeagues.includes(item.league.id))
-    .map(item => ({
-        id: item.league.id,
-        name: item.league.name,
-        logo: item.league.logo,
-  }));
+    return Object.entries(TOP_LEAGUE_IDS).map(([name, id]) => ({
+        id,
+        name,
+    }));
 }
 
 export async function getSeasons(): Promise<Season[]> {
-  // The API-Football free plan has limitations on accessible seasons.
+  // TheSportsDB uses season strings like "2023-2024"
   // Returning a static list of recent seasons as requested.
   return [
-    { year: 2025 },
-    { year: 2024 },
-    { year: 2023 },
-    { year: 2022 },
-    { year: 2021 },
+    { year: "2024-2025" },
+    { year: "2023-2024" },
+    { year: "2022-2023" },
+    { year: "2021-2022" },
   ];
 }
 
 export async function getStandings(leagueId: string, season: string): Promise<Standing[][]> {
-  const data = await fetchFromApi<any[]>(`standings?league=${leagueId}&season=${season}`);
-  if (!data || !data[0]?.league?.standings) return [];
+  const data = await fetchFromApi<{table: any[]}>(`lookuptable.php?l=${leagueId}&s=${season}`);
+  if (!data || !data.table) return [];
   
-  // The API returns an array of standings arrays (for leagues with groups)
-  return data[0].league.standings;
+  const standings: Standing[] = data.table.map(t => ({
+      rank: t.intRank,
+      team: {
+          id: t.idTeam,
+          name: t.strTeam,
+          logo: t.strTeamBadge + '/preview',
+      },
+      points: t.intPoints,
+      goalsDiff: t.intGoalDifference,
+      form: t.strForm?.replace(/[-]/g, '') || '',
+      all: {
+          played: t.intPlayed,
+          win: t.intWin,
+          draw: t.intDraw,
+          lose: t.intLoss,
+          goals: {
+              for: t.intGoalsFor,
+              against: t.intGoalsAgainst
+          }
+      },
+      group: t.strGroup || 'League Table'
+  }));
+
+  // TheSportsDB doesn't group standings for tournaments like API-Football did.
+  // We'll return it as a single group.
+  return [standings];
 }
 
 export async function getTeam(teamId: string): Promise<Team | undefined> {
-    const data = await fetchFromApi<any[]>(`teams?id=${teamId}`);
-    if (!data || data.length === 0) return undefined;
-    const teamData = data[0];
+    const data = await fetchFromApi<{teams: any[]}>(`lookupteam.php?id=${teamId}`);
+    if (!data || !data.teams || data.teams.length === 0) return undefined;
+    const teamData = data.teams[0];
     return {
-        id: teamData.team.id,
-        name: teamData.team.name,
-        logo: teamData.team.logo,
-        country: teamData.team.country,
-        stadium: teamData.venue.name,
+        id: teamData.idTeam,
+        name: teamData.strTeam,
+        logo: teamData.strTeamBadge + '/preview',
+        country: teamData.strCountry,
+        stadium: teamData.strStadium,
     };
 }
 
 export async function getTeamPlayers(teamId: string): Promise<Player[]> {
-    const season = 2023; // Use last season for more complete data
-    const data = await fetchFromApi<any[]>(`players/squads?team=${teamId}`);
-    if (!data || !data[0]?.players) return [];
+    const data = await fetchFromApi<{player: any[]}>(`lookup_all_players.php?id=${teamId}`);
+    if (!data || !data.player) return [];
   
-    return data[0].players.map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      age: p.age,
-      nationality: p.nationality,
-      photo: p.photo,
-      position: p.position,
-      statistics: [] // Player page will fetch detailed stats
+    return data.player.map((p: any) => ({
+      id: p.idPlayer,
+      name: p.strPlayer,
+      age: new Date().getFullYear() - new Date(p.dateBorn).getFullYear(),
+      nationality: p.strNationality,
+      photo: p.strCutout || p.strThumb || 'https://placehold.co/150x150.png',
+      position: p.strPosition,
+      statistics: [], // Full stats would require more calls
+      height: p.strHeight,
+      weight: p.strWeight,
     }));
 }
 
 export async function getPlayer(playerId: string): Promise<Player | undefined> {
-    const season = 2023;
-    const data = await fetchFromApi<any[]>(`players?id=${playerId}&season=${season}`);
-    if (!data || data.length === 0) return undefined;
+    const data = await fetchFromApi<{players: any[]}>(`lookupplayer.php?id=${playerId}`);
+    if (!data || !data.players) return undefined;
 
-    const p = data[0];
+    const p = data.players[0];
+    const currentTeam = await getTeam(p.idTeam);
+
     return {
-        id: p.player.id,
-        name: p.player.name,
-        age: p.player.age,
-        nationality: p.player.nationality,
-        height: p.player.height,
-        weight: p.player.weight,
-        photo: p.player.photo,
-        statistics: p.statistics.map((s:any): PlayerStats => ({
-            team: { id: s.team.id, name: s.team.name, logo: s.team.logo },
-            league: { id: s.league.id, name: s.league.name, logo: s.league.logo },
-            games: s.games,
-            goals: s.goals,
-        })),
-        position: p.statistics[0]?.games.position,
-        // The API doesn't provide a simple career history, so we'll mock this for now
-        career: [
-            { team: { name: 'Previous Club FC', logo: 'https://placehold.co/32x32' }, start: '2018', end: '2020' },
-            { team: { name: 'Youth Academy', logo: 'https://placehold.co/32x32' }, start: '2015', end: '2018' },
-        ],
+        id: p.idPlayer,
+        name: p.strPlayer,
+        age: new Date().getFullYear() - new Date(p.dateBorn).getFullYear(),
+        nationality: p.strNationality,
+        height: p.strHeight,
+        weight: p.strWeight,
+        photo: p.strCutout || p.strThumb  || 'https://placehold.co/150x150.png',
+        position: p.strPosition,
+        statistics: currentTeam ? [{
+            team: currentTeam,
+            league: { id: p.idLeague, name: p.strLeague },
+            games: { appearences: 0, minutes: 0, position: p.strPosition }, // Mocked data
+            goals: { total: 0, assists: 0 },
+        }] : [],
+        career: [], // Not provided by this endpoint
     };
 }
 
-export async function getTeamFixtures(teamId: string): Promise<any[]> {
-    const season = 2023;
-    const data = await fetchFromApi<any[]>(`fixtures?team=${teamId}&season=${season}`);
-    if (!data) return [];
+export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
+    const data = await fetchFromApi<{results: any[], events: any[]}>(`eventslast.php?id=${teamId}`);
+    if (!data || !data.results) return [];
 
-    return data.map((f:any) => {
-        const opponent = f.teams.home.id.toString() === teamId ? f.teams.away : f.teams.home;
-        const score = f.fixture.status.short === 'FT' ? `${f.goals.home} - ${f.goals.away}` : null;
+    return data.results.map((f:any) => {
+        const isHome = f.idHomeTeam === teamId;
+        const opponentId = isHome ? f.idAwayTeam : f.idHomeTeam;
+        const opponentName = isHome ? f.strAwayTeam : f.strHomeTeam;
+        const score = `${f.intHomeScore}-${f.intAwayScore}`;
+        
         let result: 'W' | 'D' | 'L' | null = null;
-        if(score) {
-            const homeWon = f.teams.home.winner;
-            const awayWon = f.teams.away.winner;
-            if (homeWon === null || awayWon === null) {
+        if(f.intHomeScore !== null) {
+            if (f.intHomeScore === f.intAwayScore) {
                 result = 'D';
-            } else if ((f.teams.home.id.toString() === teamId && homeWon) || (f.teams.away.id.toString() === teamId && awayWon)) {
+            } else if ((isHome && f.intHomeScore > f.intAwayScore) || (!isHome && f.intAwayScore > f.intHomeScore)) {
                 result = 'W';
             } else {
                 result = 'L';
             }
         }
-
+        
         return {
-            id: f.fixture.id,
-            type: score ? 'Result' : 'Upcoming',
-            opponent: { id: opponent.id, name: opponent.name, logo: opponent.logo },
-            date: f.fixture.date,
-            competition: f.league.name,
-            score: score,
-            result: result
+            id: f.idEvent,
+            type: 'Result',
+            opponent: { id: opponentId, name: opponentName, logo: 'https://placehold.co/32x32' }, // Logo not in this response
+            date: new Date(`${f.dateEvent}T${f.strTime}`).toISOString(),
+            competition: f.strLeague,
+            score,
+            result
         }
-    }).slice(-10); // Return last 10 fixtures for brevity
+    }).slice(-10); 
 }
 
-
 export async function getMatch(matchId: string): Promise<Match | undefined> {
-  const data = await fetchFromApi<any[]>(`fixtures?id=${matchId}`);
-  if (!data || data.length === 0) return undefined;
-  const matchData = data[0];
+  const data = await fetchFromApi<{events: any[]}>(`lookupevent.php?id=${matchId}`);
+  if (!data || !data.events) return undefined;
+  const matchData = data.events[0];
 
-  const lineupsData = await fetchFromApi<Lineup[]>(`fixtures/lineups?fixture=${matchId}`);
+  const [homeTeam, awayTeam] = await Promise.all([
+    getTeam(matchData.idHomeTeam),
+    getTeam(matchData.idAwayTeam)
+  ]);
   
-  return {
-    fixture: matchData.fixture,
-    league: matchData.league,
-    teams: matchData.teams,
-    goals: matchData.goals,
-    events: matchData.events,
-    lineups: lineupsData || [],
-    statistics: matchData.statistics,
-  } as Match;
+  if (!homeTeam || !awayTeam) return undefined;
+
+  // TheSportsDB does not provide detailed events, lineups, or statistics in the free tier.
+  // This data will be mocked.
+  const mockLineup = {
+      team: homeTeam,
+      formation: "4-3-3",
+      startXI: [],
+      substitutes: []
+  };
+
+  const mockEvents: MatchEvent[] = [];
+  if (matchData.strHomeGoalDetails) {
+      matchData.strHomeGoalDetails.split(';').forEach((detail:string) => {
+          const parts = detail.match(/(\d+)'?\s*(.*)/);
+          if (parts) {
+            mockEvents.push({ time: { elapsed: parts[1] }, team: {id: homeTeam.id, name: homeTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
+          }
+      });
+  }
+   if (matchData.strAwayGoalDetails) {
+      matchData.strAwayGoalDetails.split(';').forEach((detail:string) => {
+          const parts = detail.match(/(\d+)'?\s*(.*)/);
+          if (parts) {
+            mockEvents.push({ time: { elapsed: parts[1] }, team: {id: awayTeam.id, name: awayTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
+          }
+      });
+  }
+  
+  const fullMatchData = {
+    id: matchData.idEvent,
+    fixture: {
+        id: matchData.idEvent,
+        date: new Date(`${matchData.dateEvent}T${matchData.strTime}`).toISOString(),
+        venue: { name: matchData.strVenue },
+    },
+    league: { name: matchData.strLeague, round: matchData.intRound },
+    teams: { home: homeTeam, away: awayTeam },
+    goals: { home: matchData.intHomeScore, away: matchData.intAwayScore },
+    events: mockEvents,
+    lineups: [
+        {...mockLineup, team: homeTeam, formation: matchData.strHomeFormation}, 
+        {...mockLineup, team: awayTeam, formation: matchData.strAwayFormation}
+    ],
+    statistics: [], // Mocked
+  };
+
+  // Stringify for AI flow
+   const matchForAI = {
+    ...fullMatchData,
+    teams: {
+        home: { id: homeTeam.id, name: homeTeam.name },
+        away: { id: awayTeam.id, name: awayTeam.name },
+    },
+    // Mock player lists for shot generation
+    lineups: [{ team: {id: homeTeam.id}, startXI: Array(11).fill(0).map((_,i) => ({player: {id: i, name: `Home Player ${i+1}`}}))}, { team: {id: awayTeam.id}, startXI: Array(11).fill(0).map((_,i) => ({player: {id: i+11, name: `Away Player ${i+1}`}}))}]
+  };
+  
+  return fullMatchData as Match;
 }
 
 export async function getMatchShots(matchStatistics: string): Promise<Shot[]> {
     try {
         const result = await suggestShots({ matchStatistics });
         if (result.shots) {
-            return result.shots;
+            // TheSportsDB team IDs are strings
+            return result.shots.map(s => ({...s, teamId: String(s.teamId)}));
         }
     } catch (e) {
         console.error('Failed to generate shots from AI, returning empty array.', e);
@@ -191,57 +267,78 @@ export async function getMatchShots(matchStatistics: string): Promise<Shot[]> {
 
 
 export async function getPlayerHeatmap(playerId: string): Promise<HeatmapPoint[]> {
-    // API-Football does not have a direct heatmap endpoint.
-    // We will continue to use mock data for this specific visualization.
-    console.warn("Player heatmap data is mocked as API-Football does not provide it.");
+    // This API does not provide heatmap data. Using mock data.
+    console.warn("Player heatmap data is mocked.");
     const points: HeatmapPoint[] = [];
     for (let i = 0; i < 50; i++) {
         points.push({
-            x: Math.random() * 60 + 20, // 20 to 80 on x-axis
-            y: Math.random() * 60 + 4, // 4 to 64 on y-axis
+            x: Math.random() * 60 + 20,
+            y: Math.random() * 60 + 4,
         });
     }
     return points;
 }
 
 export async function getFixturesByStage(leagueId: string, season: string, round: string): Promise<Fixture[]> {
-    const data = await fetchFromApi<any[]>(`fixtures?league=${leagueId}&season=${season}&round=${round}`);
-    if (!data) return [];
+    // TheSportsDB API doesn't support fetching by stage/round name in the same way.
+    // We will fetch all matches for the season and filter if possible.
+    const roundNumber = round.match(/\d+/)?.[0];
+    if (!roundNumber) return [];
 
-    return data.map((f: any) => ({
-        id: f.fixture.id,
-        date: f.fixture.date,
-        status: f.fixture.status.long,
-        teams: f.teams,
-        goals: f.goals,
+    const data = await fetchFromApi<{events: any[]}>(`eventsround.php?id=${leagueId}&r=${roundNumber}&s=${season}`);
+    if (!data || !data.events) return [];
+
+    return data.events.map((f: any) => ({
+        id: f.idEvent,
+        date: new Date(`${f.dateEvent}T${f.strTime}`).toISOString(),
+        status: f.strStatus === "Match Finished" ? "Finished" : f.strStatus,
+        teams: {
+          home: { id: f.idHomeTeam, name: f.strHomeTeam, logo: '' }, // Logo not in this response
+          away: { id: f.idAwayTeam, name: f.strAwayTeam, logo: '' },
+        },
+        goals: {
+          home: f.intHomeScore,
+          away: f.intAwayScore,
+        },
     }));
 }
 
 export async function getFixturesByDate(date: string): Promise<Fixture[]> {
-    const data = await fetchFromApi<any[]>(`fixtures?date=${date}&status=NS-FT`);
-    if (!data) return [];
+    // TheSportsDB doesn't have a direct "fixtures by date" for all leagues.
+    // This will be mocked for now.
+    console.warn("Fixtures by date is not fully supported by TheSportsDB API and will return limited/mocked results.");
+    // Let's try to get PL fixtures for that day
+    const data = await fetchFromApi<{events: any[]}>(`eventsday.php?d=${date}&l=English%20Premier%20League`);
+    if (!data || !data.events) return [];
 
-    return data.map((f: any) => ({
-        id: f.fixture.id,
-        date: f.fixture.date,
-        status: f.fixture.status.long,
-        teams: f.teams,
-        goals: f.goals,
+    return data.events.map((f: any) => ({
+        id: f.idEvent,
+        date: new Date(`${f.dateEvent}T${f.strTime}`).toISOString(),
+        status: f.strStatus,
+        teams: {
+          home: { id: f.idHomeTeam, name: f.strHomeTeam, logo: '' }, // No logos here
+          away: { id: f.idAwayTeam, name: f.strAwayTeam, logo: '' },
+        },
+        goals: {
+          home: f.intHomeScore,
+          away: f.intAwayScore,
+        },
     }));
 }
 
 export async function searchPlayersByName(name: string): Promise<Player[]> {
-  const season = 2023; // Use a recent season for better results
-  const data = await fetchFromApi<any[]>(`players?search=${name}&season=${season}`);
-  if (!data) return [];
+  const data = await fetchFromApi<{player: any[]}>(`searchplayers.php?p=${name}`);
+  if (!data || !data.player) return [];
 
-  return data.map((p: any) => ({
-    id: p.player.id,
-    name: p.player.name,
-    age: p.player.age,
-    nationality: p.player.nationality,
-    photo: p.player.photo,
-    position: p.statistics[0]?.games.position ?? 'Unknown',
+  return data.player
+    .filter(p => p.strSport === 'Soccer') // Filter only for soccer players
+    .map((p: any) => ({
+    id: p.idPlayer,
+    name: p.strPlayer,
+    age: new Date().getFullYear() - new Date(p.dateBorn).getFullYear(),
+    nationality: p.strNationality,
+    photo: p.strCutout || p.strThumb || 'https://placehold.co/48x48.png',
+    position: p.strPosition,
     statistics: [], // Full stats can be fetched on the player page
   }));
 }

@@ -22,7 +22,7 @@ function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: 
 }
 
 function SubstitutesList({ lineup }: { lineup?: Lineup }) {
-    if (!lineup) return null;
+    if (!lineup || !lineup.substitutes) return null;
 
     return (
         <div className="p-4">
@@ -40,7 +40,7 @@ function SubstitutesList({ lineup }: { lineup?: Lineup }) {
     );
 }
 
-function StatsTable({ stats, homeTeamId, awayTeamId }: { stats: MatchStats[], homeTeamId: number, awayTeamId: number }) {
+function StatsTable({ stats, homeTeamId, awayTeamId }: { stats: MatchStats[], homeTeamId: string, awayTeamId: string }) {
     const homeStats = stats.find(s => s.team.id === homeTeamId)?.statistics || [];
     const awayStats = stats.find(s => s.team.id === awayTeamId)?.statistics || [];
     
@@ -51,28 +51,32 @@ function StatsTable({ stats, homeTeamId, awayTeamId }: { stats: MatchStats[], ho
          <Card>
             <CardHeader><CardTitle className="font-headline text-xl">Match Statistics</CardTitle></CardHeader>
             <CardContent>
-                <div className="space-y-2">
-                {allStatTypes.map(type => {
-                    const homeStat = homeStats.find(s => s.type === type)?.value ?? '0';
-                    const awayStat = awayStats.find(s => s.type === type)?.value ?? '0';
-                    const homeVal = parseInt(String(homeStat).replace('%','')) || 0;
-                    const awayVal = parseInt(String(awayStat).replace('%','')) || 0;
-                    const total = homeVal + awayVal;
+                { allStatTypes.length > 0 ? (
+                    <div className="space-y-2">
+                    {allStatTypes.map(type => {
+                        const homeStat = homeStats.find(s => s.type === type)?.value ?? '0';
+                        const awayStat = awayStats.find(s => s.type === type)?.value ?? '0';
+                        const homeVal = parseInt(String(homeStat).replace('%','')) || 0;
+                        const awayVal = parseInt(String(awayStat).replace('%','')) || 0;
+                        const total = homeVal + awayVal;
 
-                    return (
-                        <div key={type}>
-                            <div className="flex justify-between items-center text-sm font-medium mb-1">
-                                <span>{homeStat}</span>
-                                <span className="text-muted-foreground">{type}</span>
-                                <span>{awayStat}</span>
+                        return (
+                            <div key={type}>
+                                <div className="flex justify-between items-center text-sm font-medium mb-1">
+                                    <span>{homeStat}</span>
+                                    <span className="text-muted-foreground">{type}</span>
+                                    <span>{awayStat}</span>
+                                </div>
+                                <div className="w-full bg-accent rounded-full h-2.5">
+                                    <div className="bg-primary h-2.5 rounded-l-full" style={{ width: `${total > 0 ? (homeVal / total) * 100 : 50}%` }}></div>
+                                </div>
                             </div>
-                             <div className="w-full bg-accent rounded-full h-2.5">
-                                <div className="bg-primary h-2.5 rounded-l-full" style={{ width: `${total > 0 ? (homeVal / total) * 100 : 50}%` }}></div>
-                            </div>
-                        </div>
-                    )
-                })}
-                </div>
+                        )
+                    })}
+                    </div>
+                 ) : (
+                    <p className="text-muted-foreground text-center">Detailed match statistics are not available for this game.</p>
+                )}
             </CardContent>
         </Card>
     )
@@ -87,8 +91,11 @@ function EventIcon({ event }: {event: MatchEvent}) {
     }
 }
 
-function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: number}) {
-    const sortedEvents = [...events].sort((a, b) => a.time.elapsed - b.time.elapsed);
+function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: string}) {
+    if (!events || events.length === 0) {
+        return <p className="text-muted-foreground text-center">No timeline events available.</p>
+    }
+    const sortedEvents = [...events].sort((a, b) => Number(a.time.elapsed) - Number(b.time.elapsed));
 
     return (
         <div className="relative pt-4">
@@ -180,9 +187,13 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                  {/* Lineups */}
                  <Card>
                     <CardHeader><CardTitle className="font-headline text-xl">Lineups</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        {homeLineup && <LineupDiagram lineup={homeLineup} />}
-                        {awayLineup && <LineupDiagram lineup={awayLineup} />}
+                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                        {homeLineup && homeLineup.startXI.length > 0 ? (
+                           <LineupDiagram lineup={homeLineup} />
+                        ) : <p className="text-muted-foreground">Home lineup not available.</p>}
+                        {awayLineup && awayLineup.startXI.length > 0 ? (
+                            <LineupDiagram lineup={awayLineup} />
+                        ) : <p className="text-muted-foreground">Away lineup not available.</p>}
                     </CardContent>
                 </Card>
 
@@ -193,8 +204,12 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                         Substitutes
                     </CardTitle></CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 divide-y md:divide-y-0 md:divide-x">
-                        <SubstitutesList lineup={homeLineup} />
-                        <SubstitutesList lineup={awayLineup} />
+                       {homeLineup && homeLineup.substitutes.length > 0 ? (
+                            <SubstitutesList lineup={homeLineup} />
+                       ) : <p className="text-muted-foreground text-center p-4">No substitutes listed for home team.</p>}
+                       {awayLineup && awayLineup.substitutes.length > 0 ? (
+                            <SubstitutesList lineup={awayLineup} />
+                       ) : <p className="text-muted-foreground text-center p-4">No substitutes listed for away team.</p>}
                     </CardContent>
                 </Card>
 

@@ -1,15 +1,15 @@
 export interface League {
-  id: number;
+  id: string;
   name: string;
-  logo: string;
+  logo?: string;
 }
 
 export interface Season {
-  year: number;
+  year: string;
 }
 
 export interface Team {
-  id: number;
+  id: string;
   name: string;
   logo: string;
   stadium?: string;
@@ -22,7 +22,6 @@ export interface Standing {
   points: number;
   goalsDiff: number;
   form: string;
-  group: string;
   all: {
     played: number;
     win: number;
@@ -33,10 +32,11 @@ export interface Standing {
       against: number;
     };
   };
+  group: string; // TheSportsDB doesn't seem to have group info in standings, will keep for type safety
 }
 
 export interface Player {
-  id: number;
+  id: string;
   name: string;
   age: number;
   nationality: string;
@@ -62,24 +62,25 @@ export interface PlayerStats {
   };
 }
 
+
 export interface MatchTeam {
-  id: number;
+  id: string;
   name: string;
   logo: string;
-  winner: boolean | null;
 }
 
 export interface Match {
+  id: string;
   fixture: {
-    id: number;
+    id: string;
     date: string;
     venue: {
-      name: string;
+      name: string | null;
     };
   };
   league: {
-    name: string;
-    round: string;
+    name: string | null;
+    round: string | null;
   };
   teams: {
     home: MatchTeam;
@@ -96,14 +97,14 @@ export interface Match {
 
 export interface MatchEvent {
   time: {
-    elapsed: number;
+    elapsed: number | string;
   };
   team: {
-    id: number;
+    id: string;
     name: string;
   };
   player: {
-    id: number;
+    id: string;
     name: string;
   };
   type: 'Goal' | 'Card' | 'subst';
@@ -111,7 +112,7 @@ export interface MatchEvent {
 }
 
 export interface LineupPlayer {
-  id: number;
+  id: string;
   name: string;
   pos: string;
   grid: string | null;
@@ -119,14 +120,15 @@ export interface LineupPlayer {
 
 export interface Lineup {
   team: MatchTeam;
-  formation: string;
+  formation: string | null;
   startXI: { player: LineupPlayer }[];
   substitutes: { player: LineupPlayer }[];
 }
 
+
 export interface MatchStats {
   team: {
-    id: number;
+    id: string;
     name: string;
   };
   statistics: {
@@ -138,10 +140,10 @@ export interface MatchStats {
 export interface Shot {
   x: number;
   y: number;
-  teamId: number;
+  teamId: string;
   type: 'Goal' | 'Saved' | 'Miss';
   player: {
-    id: number;
+    id: string;
     name: string;
   };
 }
@@ -152,7 +154,7 @@ export interface HeatmapPoint {
 }
 
 export interface Fixture {
-    id: number;
+    id: string;
     date: string;
     status: string;
     teams: {
@@ -163,4 +165,9 @@ export interface Fixture {
       home: number | null;
       away: number | null;
     };
+    competition?: string;
+    opponent?: any;
+    result?: 'W' | 'D' | 'L' | null;
+    score?: string | null;
+    type?: string;
 }

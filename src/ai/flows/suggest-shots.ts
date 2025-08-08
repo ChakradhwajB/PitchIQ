@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -52,10 +51,10 @@ const prompt = ai.definePrompt({
   - Each shot must be a comma-separated string with the format: "x,y,teamId,type,playerId,playerName".
   - 'type' must be one of: Goal, Saved, Miss.
   - The number of 'Goal' type shots must exactly match the final score for each team.
-  - The total number of shots for each team should roughly match their "Total Shots" statistic.
+  - The total number of shots for each team should roughly match their "Total Shots" statistic, if available.
   - Distribute shots among the listed players for each team.
   - Shot coordinates (x, y) must be within the bounds of a standard soccer pitch (0-105 for x, 0-68 for y).
-  - Home team shots should be on one half, away team on the other.
+  - Home team shots should be on one half (x > 52.5), away team on the other (x < 52.5).
 
   Match Statistics:
   {{matchStatistics}}

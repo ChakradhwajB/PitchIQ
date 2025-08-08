@@ -11,7 +11,7 @@ interface FixtureListProps {
 
 export default function FixtureList({ fixtures }: FixtureListProps) {
     if (fixtures.length === 0) {
-        return <p>No fixtures found for this stage.</p>
+        return <p>No fixtures found for this selection.</p>
     }
 
     return (
@@ -23,11 +23,11 @@ export default function FixtureList({ fixtures }: FixtureListProps) {
                            <div className="flex flex-col items-end gap-2">
                                <div className="flex items-center gap-2">
                                    <span className="font-medium text-right w-32 truncate">{fixture.teams.home.name}</span>
-                                   <Image src={fixture.teams.home.logo} alt={fixture.teams.home.name} width={24} height={24} data-ai-hint="team logo" />
+                                   <Image src={fixture.teams.home.logo || 'https://placehold.co/24x24.png'} alt={fixture.teams.home.name} width={24} height={24} data-ai-hint="team logo" />
                                </div>
                                <div className="flex items-center gap-2">
                                    <span className="font-medium text-right w-32 truncate">{fixture.teams.away.name}</span>
-                                   <Image src={fixture.teams.away.logo} alt={fixture.teams.away.name} width={24} height={24} data-ai-hint="team logo" />
+                                   <Image src={fixture.teams.away.logo || 'https://placehold.co/24x24.png'} alt={fixture.teams.away.name} width={24} height={24} data-ai-hint="team logo" />
                                </div>
                            </div>
                            <div className="flex flex-col items-center border-l border-r px-4">
@@ -36,7 +36,7 @@ export default function FixtureList({ fixtures }: FixtureListProps) {
                            </div>
                         </div>
                         <div className="text-right">
-                           <Badge variant={fixture.status === 'Match Finished' ? 'secondary' : 'outline'}>{fixture.status}</Badge>
+                           <Badge variant={fixture.status === 'Finished' ? 'secondary' : 'outline'}>{fixture.status}</Badge>
                            <p className="text-xs text-muted-foreground mt-1">{new Date(fixture.date).toLocaleString()}</p>
                         </div>
                     </div>

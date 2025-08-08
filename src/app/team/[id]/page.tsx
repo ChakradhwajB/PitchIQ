@@ -1,5 +1,5 @@
 import { getTeam, getTeamPlayers, getTeamFixtures } from '@/lib/api';
-import type { Player } from '@/lib/types';
+import type { Player, Fixture } from '@/lib/types';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -42,9 +42,9 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
   ]);
 
   const keyStats = {
-    goalsScored: 76, // Mock data
-    goalsConceded: 34,
-    avgPossession: "58.5%",
+    goalsScored: 'N/A', 
+    goalsConceded: 'N/A',
+    avgPossession: "N/A",
   };
 
   return (
@@ -76,6 +76,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
             <StatCard icon={Shield} title="Goals Conceded" value={keyStats.goalsConceded} color="text-red-500" />
             <StatCard icon={BarChart} title="Average Possession" value={keyStats.avgPossession} color="text-blue-500" />
         </div>
+        <p className="text-xs text-muted-foreground mt-2">Note: Detailed season stats are not available in the new API.</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -99,7 +100,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                                 <TableRow key={player.id}>
                                     <TableCell>
                                         <Link href={`/player/${player.id}`} className="flex items-center gap-3 group">
-                                             <Image src={player.photo} alt={player.name} width={32} height={32} className="rounded-full object-cover transition-transform group-hover:scale-110" data-ai-hint="player photo" />
+                                             <Image src={player.photo} alt={player.name} width={32} height={32} className="rounded-full object-cover transition-transform group-hover:scale-110 bg-muted" data-ai-hint="player photo" />
                                             <span className="font-medium group-hover:text-primary">{player.name}</span>
                                         </Link>
                                     </TableCell>
@@ -127,7 +128,7 @@ export default async function TeamPage({ params }: { params: { id: string } }) {
                             <Link href={`/match/${fixture.id}`} key={fixture.id} className="block p-3 rounded-lg hover:bg-accent transition-colors">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <Image src={fixture.opponent.logo} alt={fixture.opponent.name} width={24} height={24} data-ai-hint="team logo" />
+                                        <Image src={fixture.opponent.logo} alt={fixture.opponent.name} width={24} height={24} data-ai-hint="team logo" className="bg-white rounded-full"/>
                                         <span className="font-medium">{fixture.opponent.name}</span>
                                     </div>
                                     {fixture.type === 'Result' ? (

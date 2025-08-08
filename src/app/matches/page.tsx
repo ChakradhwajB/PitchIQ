@@ -79,7 +79,7 @@ export default function MatchesPage() {
           ) : fixtures.length > 0 ? (
             <FixtureList fixtures={fixtures} />
           ) : (
-            <p>No matches scheduled for this date.</p>
+            <p>No matches scheduled for this date. The free tier of TheSportsDB has limited data for this query.</p>
           )}
         </CardContent>
       </Card>

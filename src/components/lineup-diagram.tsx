@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import type { Lineup } from '@/lib/types';
@@ -38,7 +36,7 @@ const PitchSVG = () => (
 );
 
 const getPositionCoords = (grid: string, formation: string, isHome: boolean) => {
-    if (!grid) return { x: 50, y: 50 };
+    if (!grid || !formation) return { x: 50, y: 50 };
 
     const [row, col] = grid.split(':').map(Number);
     
@@ -73,9 +71,17 @@ const getPositionCoords = (grid: string, formation: string, isHome: boolean) => 
 
 export default function LineupDiagram({ lineup }: LineupDiagramProps) {
   // Simple heuristic for home/away, can be improved.
-  // Assuming the first player (goalie) for home team is on the left side.
-  const firstPlayerGrid = lineup.startXI[0]?.player.grid;
-  const isHome = firstPlayerGrid ? parseInt(firstPlayerGrid.split(':')[1]) <= 5 : true;
+  // TheSportsDB doesn't provide grid info, so this component will be mostly non-functional
+  const isHome = true;
+
+  if (!lineup.formation || lineup.startXI.length === 0) {
+      return (
+          <div className="text-center">
+            <h3 className="font-bold font-headline text-lg">{lineup.team.name}</h3>
+            <p className="text-sm text-muted-foreground mb-4">Lineup information not available.</p>
+          </div>
+      )
+  }
 
   return (
      <div className="text-center">
@@ -88,8 +94,8 @@ export default function LineupDiagram({ lineup }: LineupDiagramProps) {
                 </div>
                 <div className="absolute inset-0">
                     {lineup.startXI.map(({ player }) => {
-                        if (!player.grid) return null;
-                        const { x, y } = getPositionCoords(player.grid, lineup.formation, isHome);
+                        if (!player.grid) return null; // Can't render without grid positions
+                        const { x, y } = getPositionCoords(player.grid, lineup.formation || '4-3-3', isHome);
                         
                         return (
                             <Tooltip key={player.id}>

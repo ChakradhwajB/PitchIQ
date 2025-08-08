@@ -36,10 +36,10 @@ function PlayerStatBreakdown({ stats }: { stats: PlayerStats }) {
                 </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                <div className="flex items-center gap-2"><Zap className="w-4 h-4 text-primary" /> <strong>Apps:</strong> {stats.games.appearences}</div>
-                <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /> <strong>Mins:</strong> {stats.games.minutes}</div>
-                <div className="flex items-center gap-2"><Target className="w-4 h-4 text-primary" /> <strong>Goals:</strong> {stats.goals.total}</div>
-                <div className="flex items-center gap-2"><Award className="w-4 h-4 text-primary" /> <strong>Assists:</strong> {stats.goals.assists ?? 0}</div>
+                <div className="flex items-center gap-2"><Zap className="w-4 h-4 text-primary" /> <strong>Apps:</strong> {stats.games.appearences || 'N/A'}</div>
+                <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-primary" /> <strong>Mins:</strong> {stats.games.minutes || 'N/A'}</div>
+                <div className="flex items-center gap-2"><Target className="w-4 h-4 text-primary" /> <strong>Goals:</strong> {stats.goals.total || 'N/A'}</div>
+                <div className="flex items-center gap-2"><Award className="w-4 h-4 text-primary" /> <strong>Assists:</strong> {stats.goals.assists ?? 'N/A'}</div>
                 <div className="flex items-center gap-2"><Shield className="w-4 h-4 text-primary" /> <strong>Position:</strong> {stats.games.position}</div>
             </CardContent>
         </Card>
@@ -56,6 +56,8 @@ export default async function PlayerPage({ params }: { params: { id: string } })
     notFound();
   }
 
+  const currentTeam = player.statistics?.[0]?.team;
+
   return (
     <div className="container mx-auto px-4 py-8">
         <Card className="mb-8 overflow-hidden rounded-xl shadow-lg">
@@ -66,17 +68,19 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                         alt={player.name}
                         width={150}
                         height={150}
-                        className="rounded-full border-4 border-background object-cover shadow-2xl"
+                        className="rounded-full border-4 border-background object-cover shadow-2xl bg-white"
                         data-ai-hint="player photo"
                     />
+                    {currentTeam?.logo && (
                      <Image
-                        src={player.statistics[0].team.logo}
-                        alt={player.statistics[0].team.name}
+                        src={currentTeam.logo}
+                        alt={currentTeam.name}
                         width={48}
                         height={48}
                         className="absolute bottom-0 right-0 rounded-full border-2 border-background bg-white p-1"
                         data-ai-hint="team logo"
                     />
+                    )}
                 </div>
                 <div className="text-center md:text-left text-primary-foreground">
                     <h1 className="text-4xl font-headline font-bold">{player.name}</h1>
@@ -84,8 +88,8 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2">
                         <div className="flex items-center gap-2"><User className="w-4 h-4"/>Age: {player.age}</div>
                         <div className="flex items-center gap-2"><Flag className="w-4 h-4"/>{player.nationality}</div>
-                        <div className="flex items-center gap-2"><Calendar className="w-4 h-4"/>Height: {player.height}</div>
-                        <div className="flex items-center gap-2"><BarChart className="w-4 h-4"/>Weight: {player.weight}</div>
+                        <div className="flex items-center gap-2"><Calendar className="w-4 h-4"/>Height: {player.height || 'N/A'}</div>
+                        <div className="flex items-center gap-2"><BarChart className="w-4 h-4"/>Weight: {player.weight || 'N/A'}</div>
                     </div>
                 </div>
             </div>
@@ -98,9 +102,11 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                         <CardTitle className="font-headline text-2xl">Performance Metrics</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {player.statistics.map((stats, idx) => (
+                        {player.statistics.length > 0 ? player.statistics.map((stats, idx) => (
                            <PlayerStatBreakdown key={idx} stats={stats} />
-                        ))}
+                        )) : (
+                            <p className="text-muted-foreground">Statistics for this player are not available.</p>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -120,28 +126,36 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                         <CardTitle className="font-headline text-2xl">Career History</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <ul className="space-y-4">
-                            {/* Current Team */}
-                            <li className="flex items-center gap-4">
-                                <Image src={player.statistics[0].team.logo} alt={player.statistics[0].team.name} width={40} height={40} data-ai-hint="team logo"/>
-                                <div>
-                                    <p className="font-bold">{player.statistics[0].team.name}</p>
-                                    <p className="text-sm text-muted-foreground">{player.career?.[0].end ?? '2020'} - Present</p>
-                                </div>
-                                <ArrowRightCircle className="ml-auto h-5 w-5 text-primary" />
-                            </li>
-                            <Separator />
-                            {/* Past Teams */}
-                            {player.career?.map((club, idx) => (
-                                <li key={idx} className="flex items-center gap-4 opacity-70">
-                                    <Image src={club.team.logo} alt={club.team.name} width={40} height={40} data-ai-hint="team logo"/>
+                         {player.career && player.career.length > 0 ? (
+                            <ul className="space-y-4">
+                                {/* Current Team */}
+                                {currentTeam && (
+                                <>
+                                <li className="flex items-center gap-4">
+                                    <Image src={currentTeam.logo} alt={currentTeam.name} width={40} height={40} data-ai-hint="team logo"/>
                                     <div>
-                                        <p className="font-medium">{club.team.name}</p>
-                                        <p className="text-sm text-muted-foreground">{club.start} - {club.end}</p>
+                                        <p className="font-bold">{currentTeam.name}</p>
+                                        <p className="text-sm text-muted-foreground">{player.career?.[0].start} - Present</p>
                                     </div>
+                                    <ArrowRightCircle className="ml-auto h-5 w-5 text-primary" />
                                 </li>
-                            ))}
-                        </ul>
+                                <Separator />
+                                </>
+                                )}
+                                {/* Past Teams */}
+                                {player.career?.map((club, idx) => (
+                                    <li key={idx} className="flex items-center gap-4 opacity-70">
+                                        <Image src={club.team.logo} alt={club.team.name} width={40} height={40} data-ai-hint="team logo"/>
+                                        <div>
+                                            <p className="font-medium">{club.team.name}</p>
+                                            <p className="text-sm text-muted-foreground">{club.start} - {club.end}</p>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-muted-foreground">Career history is not available.</p>
+                        )}
                     </CardContent>
                 </Card>
             </div>

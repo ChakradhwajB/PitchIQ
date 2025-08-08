@@ -16,21 +16,30 @@ import TeamPointsChart from '@/components/team-points-chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import FixtureList from '@/components/fixture-list';
 
-const TOURNAMENT_LEAGUE_IDS = [2, 3]; // UCL, UEL
+// TheSportsDB uses league IDs that are strings.
+const TOURNAMENT_LEAGUE_IDS = ['4480', '4481']; // UCL, UEL
 
 const TOURNAMENT_STAGES = [
+  // TheSportsDB uses round numbers for knockout stages
   'Group Stage',
   'Round of 16',
   'Quarter-finals',
   'Semi-finals',
   'Final',
 ];
+const STAGE_TO_ROUND_MAP: {[key: string]: string} = {
+    'Round of 16': '16',
+    'Quarter-finals': '8',
+    'Semi-finals': '4',
+    'Final': '2'
+}
+
 
 export default function Home() {
   const [leagues, setLeagues] = React.useState<League[]>([]);
   const [seasons, setSeasons] = React.useState<Season[]>([]);
-  const [selectedLeague, setSelectedLeague] = React.useState<string>('39');
-  const [selectedSeason, setSelectedSeason] = React.useState<string>('2023');
+  const [selectedLeague, setSelectedLeague] = React.useState<string>('4328'); // Default to Premier League
+  const [selectedSeason, setSelectedSeason] = React.useState<string>('2023-2024');
   const [standings, setStandings] = React.useState<Standing[][]>([]);
   const [fixtures, setFixtures] = React.useState<Fixture[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -41,22 +50,21 @@ export default function Home() {
       setLoading(true);
       const leaguesData = await getLeagues();
       setLeagues(leaguesData);
-      // As per API limitations, we will use a fixed list of recent, valid seasons.
+      
+      // Using static seasons as TheSportsDB API for seasons is not ideal
       const availableSeasons = [
-          { year: 2023 },
-          { year: 2022 },
-          { year: 2021 },
-          { year: 2024 },
-          { year: 2025 },
-      ].sort((a,b) => b.year - a.year);
+          { year: "2023-2024" },
+          { year: "2022-2023" },
+          { year: "2021-2022" },
+      ];
       setSeasons(availableSeasons);
-      setSelectedSeason('2023');
+      setSelectedSeason('2023-2024');
       setLoading(false);
     }
     fetchInitialData();
   }, []);
 
-  const isTournament = TOURNAMENT_LEAGUE_IDS.includes(parseInt(selectedLeague));
+  const isTournament = TOURNAMENT_LEAGUE_IDS.includes(selectedLeague);
   const showStandings = !isTournament || (isTournament && selectedStage === 'Group Stage');
 
   React.useEffect(() => {
@@ -70,7 +78,8 @@ export default function Home() {
             const standingsData = await getStandings(selectedLeague, selectedSeason);
             setStandings(standingsData);
         } else { // This is a tournament knockout stage
-            const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, selectedStage.replace(/ /g, '-'));
+            const round = STAGE_TO_ROUND_MAP[selectedStage] || '1'; // Default to something
+            const fixturesData = await getFixturesByStage(selectedLeague, selectedSeason, round);
             setFixtures(fixturesData);
         }
 
@@ -93,7 +102,7 @@ export default function Home() {
     setSelectedStage(stage);
   }
 
-  const selectedLeagueName = leagues.find(l => l.id.toString() === selectedLeague)?.name || 'League';
+  const selectedLeagueName = leagues.find(l => l.id === selectedLeague)?.name || 'League';
   const isGroupStage = standings.length > 1;
   const showFixtures = isTournament && !showStandings;
 
@@ -110,7 +119,7 @@ export default function Home() {
             </SelectTrigger>
             <SelectContent>
               {leagues.map((league) => (
-                <SelectItem key={league.id} value={league.id.toString()}>
+                <SelectItem key={league.id} value={league.id}>
                   {league.name}
                 </SelectItem>
               ))}
@@ -122,7 +131,7 @@ export default function Home() {
             </SelectTrigger>
             <SelectContent>
               {seasons.map((season) => (
-                <SelectItem key={season.year} value={season.year.toString()}>
+                <SelectItem key={season.year} value={season.year}>
                   {season.year}
                 </SelectItem>
               ))}
@@ -192,7 +201,7 @@ export default function Home() {
                   <CardTitle className="font-headline text-2xl">No Data Available</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>There is no data available for the selected league, season, and stage. Please try a different selection.</p>
+                  <p>There is no data available for the selected league, season, and stage. TheSportsDB has limited historical data. Please try a different selection.</p>
                 </CardContent>
               </Card>
           )}
