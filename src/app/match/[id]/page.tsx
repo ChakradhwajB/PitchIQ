@@ -88,23 +88,49 @@ function EventIcon({ event }: {event: MatchEvent}) {
 }
 
 function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: number}) {
+    const sortedEvents = [...events].sort((a, b) => a.time.elapsed - b.time.elapsed);
+
     return (
-        <div className="relative pl-8">
-             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border"></div>
-            {events.map((event, i) => (
-                <div key={i} className={`relative flex items-center mb-6 ${event.team.id === homeTeamId ? 'justify-start' : 'justify-end flex-row-reverse'}`}>
-                    <div className={`absolute ${event.team.id === homeTeamId ? '-left-12' : '-right-12'} bg-background border-2 border-primary rounded-full p-1`}>
-                        <EventIcon event={event} />
+        <div className="relative">
+             <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-border"></div>
+            {sortedEvents.map((event, i) => {
+                const isHomeEvent = event.team.id === homeTeamId;
+                return (
+                    <div key={i} className="relative flex items-center mb-8">
+                        {isHomeEvent ? (
+                            <>
+                                <div className="flex-1 text-right pr-12">
+                                     <div className="p-3 rounded-lg bg-card shadow-sm inline-block text-left">
+                                        <p className="font-semibold">{event.player.name}</p>
+                                        <p className="text-xs text-muted-foreground">{event.detail}</p>
+                                    </div>
+                                </div>
+                                <div className="absolute left-1/2 -translate-x-1/2 bg-background border-2 border-primary rounded-full p-1 z-10">
+                                    <EventIcon event={event} />
+                                </div>
+                                <div className="flex-1 pl-12">
+                                    <div className="font-bold text-lg w-10 text-center">{event.time.elapsed}'</div>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex-1 text-right pr-12">
+                                     <div className="font-bold text-lg w-10 text-center ml-auto">{event.time.elapsed}'</div>
+                                </div>
+                                 <div className="absolute left-1/2 -translate-x-1/2 bg-background border-2 border-primary rounded-full p-1 z-10">
+                                    <EventIcon event={event} />
+                                </div>
+                                <div className="flex-1 pl-12">
+                                    <div className="p-3 rounded-lg bg-card shadow-sm inline-block text-left">
+                                        <p className="font-semibold">{event.player.name}</p>
+                                        <p className="text-xs text-muted-foreground">{event.detail}</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
-                    <div className={`flex items-center gap-4 ${event.team.id === homeTeamId ? '' : 'flex-row-reverse'}`}>
-                        <div className="font-bold text-lg w-10 text-center">{event.time.elapsed}'</div>
-                         <div className={`p-3 rounded-lg bg-card shadow-sm w-48 ${event.team.id === homeTeamId ? 'text-left' : 'text-right'}`}>
-                            <p className="font-semibold">{event.player.name}</p>
-                            <p className="text-xs text-muted-foreground">{event.detail}</p>
-                        </div>
-                    </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     )
 }
