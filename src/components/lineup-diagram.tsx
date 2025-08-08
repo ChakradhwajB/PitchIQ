@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Lineup } from '@/lib/types';
@@ -13,6 +14,13 @@ import {
 interface LineupDiagramProps {
   lineup: Lineup;
 }
+
+const positionMap: { [key: string]: string } = {
+    G: 'Goalkeeper',
+    D: 'Defender',
+    M: 'Midfielder',
+    F: 'Forward',
+};
 
 const PitchSVG = () => (
     <svg viewBox="0 0 105 68" className="w-full h-auto bg-green-700/20 border-2 border-white/20 rounded-lg">
@@ -100,7 +108,7 @@ export default function LineupDiagram({ lineup }: LineupDiagramProps) {
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p className="font-bold">{player.name}</p>
-                                    <p>Position: {player.pos}</p>
+                                    <p>Position: {positionMap[player.pos] || player.pos}</p>
                                 </TooltipContent>
                             </Tooltip>
                         );

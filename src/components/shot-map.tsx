@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Shot } from '@/lib/types';
@@ -51,36 +52,23 @@ const PitchSVG = () => (
 
 export default function ShotMap({ shots, homeTeamId, awayTeamId }: ShotMapProps) {
   return (
-    <TooltipProvider>
       <div className="relative w-full aspect-[105/68]">
         <div className="absolute inset-0">
           <PitchSVG />
         </div>
         <svg viewBox="0 0 105 68" className="absolute inset-0 w-full h-full">
           {shots.map((shot, index) => (
-            <Tooltip key={index}>
-              <TooltipTrigger asChild>
-                <g>
-                  <circle
-                    cx={shot.x}
-                    cy={shot.y}
-                    r="1.5"
-                    className={`${shotColors[shot.type]} opacity-80 hover:opacity-100 transition-opacity cursor-pointer transform hover:scale-125`}
-                    strokeWidth="0.3"
-                  />
-                </g>
-              </TooltipTrigger>
-              <TooltipContent>
-                 <Link href={`/player/${shot.player.id}`} className="font-bold hover:text-primary transition-colors hover:underline">
-                    {shot.player.name}
-                 </Link>
-                <p>Result: <span className="font-semibold">{shot.type}</span></p>
-                <p>Team: <span className="font-semibold">{shot.teamId === homeTeamId ? 'Home' : 'Away'}</span></p>
-              </TooltipContent>
-            </Tooltip>
+            <g key={index}>
+              <circle
+                cx={shot.x}
+                cy={shot.y}
+                r="1.5"
+                className={`${shotColors[shot.type]} opacity-80`}
+                strokeWidth="0.3"
+              />
+            </g>
           ))}
         </svg>
       </div>
-    </TooltipProvider>
   );
 }
