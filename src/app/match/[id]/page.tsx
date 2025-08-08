@@ -25,25 +25,18 @@ function SubstitutesList({ lineup }: { lineup?: Lineup }) {
     if (!lineup) return null;
 
     return (
-        <Card className="shadow-none">
-             <CardHeader>
-                <CardTitle className="text-lg font-headline flex items-center gap-2">
-                    <Users className="w-5 h-5"/>
-                    Substitutes
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                     {lineup.substitutes.map(p => (
-                        <li key={p.player.id}>
-                            <Link href={`/player/${p.player.id}`} className="hover:text-primary transition-colors hover:underline">
-                                {p.player.name}
-                            </Link>
-                        </li>
-                     ))}
-                </ul>
-            </CardContent>
-        </Card>
+        <div className="p-4">
+            <h3 className="font-bold text-lg mb-2 text-center font-headline">{lineup.team.name}</h3>
+            <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                 {lineup.substitutes.map(p => (
+                    <li key={p.player.id}>
+                        <Link href={`/player/${p.player.id}`} className="hover:text-primary transition-colors hover:underline">
+                            {p.player.name}
+                        </Link>
+                    </li>
+                 ))}
+            </ul>
+        </div>
     );
 }
 
@@ -188,9 +181,21 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                  {/* Lineups */}
                  <Card>
                     <CardHeader><CardTitle className="font-headline text-xl">Lineups</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                         {homeLineup && <LineupDiagram lineup={homeLineup} />}
                         {awayLineup && <LineupDiagram lineup={awayLineup} />}
+                    </CardContent>
+                </Card>
+
+                 {/* Substitutes */}
+                <Card>
+                    <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2">
+                        <Users className="w-5 h-5"/>
+                        Substitutes
+                    </CardTitle></CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8 divide-y md:divide-y-0 md:divide-x">
+                        <SubstitutesList lineup={homeLineup} />
+                        <SubstitutesList lineup={awayLineup} />
                     </CardContent>
                 </Card>
 
@@ -217,15 +222,6 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                 <StatsTable stats={match.statistics} homeTeamId={match.teams.home.id} awayTeamId={match.teams.away.id} />
             </div>
         </div>
-
-        {/* Substitutes */}
-        <Card className="mt-8">
-            <CardHeader><CardTitle className="font-headline text-2xl">Substitutes</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <SubstitutesList lineup={homeLineup} />
-                <SubstitutesList lineup={awayLineup} />
-            </CardContent>
-        </Card>
     </div>
   );
 }
