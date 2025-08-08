@@ -3,7 +3,7 @@ import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint,
 import { suggestShots } from '@/ai/flows/suggest-shots';
 
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
-const API_KEY = process.env.THESPORTSDB_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_THESPORTSDB_API_KEY;
 const PLACEHOLDER_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/placeholders/player_placeholder.png';
 const PLACEHOLDER_TEAM_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/placeholders/team_placeholder.png';
 
@@ -23,7 +23,7 @@ function cleanImageUrl(url: string | null | undefined): string {
 // Helper function to make API calls
 async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
   if (!API_KEY) {
-    console.error("TheSportsDB API key is missing. Add THESPORTSDB_API_KEY to your .env file.");
+    console.error("TheSportsDB API key is missing. Add NEXT_PUBLIC_THESPORTSDB_API_KEY to your .env file.");
     return null;
   }
   try {
