@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,48 +12,57 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const ShotSchema = z.object({
-  x: z.number().describe('The x-coordinate of the shot on a 105x68 pitch.'),
-  y: z.number().describe('The y-coordinate of the shot on a 105x68 pitch.'),
-  teamId: z.number().describe('The ID of the team that took the shot.'),
-  type: z.enum(['Goal', 'Saved', 'Miss']).describe('The outcome of the shot.'),
-  player: z.object({
-    id: z.number().describe('The ID of the player who took the shot.'),
-    name: z.string().describe('The name of the player who took the shot.'),
-  }).describe('The player who took the shot.'),
-});
-
 const SuggestShotsInputSchema = z.object({
   matchStatistics: z.string().describe('Comprehensive soccer match statistics in JSON format, including teams, goals, and player lists.'),
 });
 export type SuggestShotsInput = z.infer<typeof SuggestShotsInputSchema>;
+
+// Define the final output structure we want.
+const ShotSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  teamId: z.number(),
+  type: z.enum(['Goal', 'Saved', 'Miss']),
+  player: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+});
 
 const SuggestShotsOutputSchema = z.object({
   shots: z.array(ShotSchema).describe('A list of generated shots for the match.'),
 });
 export type SuggestShotsOutput = z.infer<typeof SuggestShotsOutputSchema>;
 
+
 export async function suggestShots(input: SuggestShotsInput): Promise<SuggestShotsOutput> {
   return suggestShotsFlow(input);
 }
 
+// A simpler schema for the AI to output: just an array of strings.
+const aIShotOutputSchema = z.object({
+    shots: z.array(z.string()).describe('List of shots as comma-separated strings: "x,y,teamId,type,playerId,playerName"'),
+});
+
 const prompt = ai.definePrompt({
   name: 'suggestShotsPrompt',
   input: {schema: SuggestShotsInputSchema},
-  output: {schema: SuggestShotsOutputSchema},
+  output: {schema: aIShotOutputSchema }, // The AI's output is now a simple list of strings.
   prompt: `You are an AI assistant that creates plausible shot map data for a soccer match based on its statistics.
 
   Given the following match statistics, generate a list of shots. 
-  - The number of shots for each team should roughly match their "Total Shots" statistic.
+  - Each shot must be a comma-separated string with the format: "x,y,teamId,type,playerId,playerName".
+  - 'type' must be one of: Goal, Saved, Miss.
   - The number of 'Goal' type shots must exactly match the final score for each team.
+  - The total number of shots for each team should roughly match their "Total Shots" statistic.
   - Distribute shots among the listed players for each team.
   - Shot coordinates (x, y) must be within the bounds of a standard soccer pitch (0-105 for x, 0-68 for y).
-  - Shots for the home team should generally be on one side of the pitch and away team shots on the other.
+  - Home team shots should be on one half, away team on the other.
 
   Match Statistics:
   {{matchStatistics}}
 
-  Generate the shots now.
+  Generate the shots as a list of comma-separated strings now.
   `,
 });
 
@@ -60,25 +70,57 @@ const suggestShotsFlow = ai.defineFlow(
   {
     name: 'suggestShotsFlow',
     inputSchema: SuggestShotsInputSchema,
-    outputSchema: SuggestShotsOutputSchema,
+    outputSchema: SuggestShotsOutputSchema, // The flow's final output is the structured schema.
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) : Promise<SuggestShotsOutput> => {
+    const {output: aiOutput} = await prompt(input);
     
-    // Post-process to ensure data integrity, as the AI might not be perfect.
-    if (output?.shots) {
-        output.shots = output.shots.filter(shot => 
-            shot.x >= 0 && shot.x <= 105 && 
-            shot.y >= 0 && shot.y <= 68 &&
-            shot.teamId &&
-            shot.player?.id &&
-            shot.player?.name
-        );
-    } else {
-        // If the AI fails to return any shots, return an empty array.
-        return { shots: [] };
+    if (!aiOutput || !aiOutput.shots) {
+      // If the AI fails to return anything, return an empty array.
+      return { shots: [] };
+    }
+
+    const parsedShots: z.infer<typeof ShotSchema>[] = [];
+    
+    for (const shotString of aiOutput.shots) {
+      try {
+        const parts = shotString.split(',');
+        if (parts.length < 6) continue;
+
+        const [xStr, yStr, teamIdStr, type, playerIdStr, ...playerNameParts] = parts;
+        const playerName = playerNameParts.join(',').trim(); // Handle names with commas
+
+        const x = parseFloat(xStr);
+        const y = parseFloat(yStr);
+        const teamId = parseInt(teamIdStr, 10);
+        const playerId = parseInt(playerIdStr, 10);
+
+        // Validate the parsed data
+        if (
+          !isNaN(x) && x >= 0 && x <= 105 &&
+          !isNaN(y) && y >= 0 && y <= 68 &&
+          !isNaN(teamId) &&
+          !isNaN(playerId) &&
+          ['Goal', 'Saved', 'Miss'].includes(type) &&
+          playerName
+        ) {
+          parsedShots.push({
+            x,
+            y,
+            teamId,
+            type: type as 'Goal' | 'Saved' | 'Miss',
+            player: {
+              id: playerId,
+              name: playerName,
+            },
+          });
+        }
+      } catch (e) {
+        // Ignore lines that fail to parse
+        console.warn(`Could not parse shot string: "${shotString}"`, e);
+      }
     }
     
-    return output;
+    return { shots: parsedShots };
   }
 );
