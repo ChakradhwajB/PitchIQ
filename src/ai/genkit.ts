@@ -3,5 +3,5 @@ import {googleAI} from '@genkit-ai/googleai';
 
 export const ai = genkit({
   plugins: [googleAI()],
-  model: 'googleai/gemma-2b',
+  model: 'gemini-1.5-flash-latest',
 });
