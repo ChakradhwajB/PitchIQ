@@ -27,6 +27,7 @@ export async function suggestInsights(input: SuggestInsightsInput): Promise<Sugg
 
 const prompt = ai.definePrompt({
   name: 'suggestInsightsPrompt',
+  model: 'gemini-1.5-flash-latest',
   input: {schema: SuggestInsightsInputSchema},
   output: {schema: SuggestInsightsOutputSchema},
   prompt: `You are an AI assistant that analyzes soccer match statistics and provides key insights.

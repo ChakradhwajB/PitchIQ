@@ -29,11 +29,9 @@ const ShotSchema = z.object({
   }),
 });
 
-const SuggestShotsOutputSchema = z.object({
-  shots: z.array(ShotSchema).describe('A list of generated shots for the match.'),
-});
-export type SuggestShotsOutput = z.infer<typeof SuggestShotsOutputSchema>;
-
+export type SuggestShotsOutput = {
+    shots: z.infer<typeof ShotSchema>[];
+}
 
 export async function suggestShots(input: SuggestShotsInput): Promise<SuggestShotsOutput> {
   return suggestShotsFlow(input);
@@ -46,6 +44,7 @@ const aIShotOutputSchema = z.object({
 
 const prompt = ai.definePrompt({
   name: 'suggestShotsPrompt',
+  model: 'gemini-1.5-flash-latest',
   input: {schema: SuggestShotsInputSchema},
   output: {schema: aIShotOutputSchema }, // The AI's output is now a simple list of strings.
   prompt: `You are an AI assistant that creates plausible shot map data for a soccer match based on its statistics.
@@ -70,7 +69,7 @@ const suggestShotsFlow = ai.defineFlow(
   {
     name: 'suggestShotsFlow',
     inputSchema: SuggestShotsInputSchema,
-    outputSchema: SuggestShotsOutputSchema, // The flow's final output is the structured schema.
+    outputSchema: z.custom<SuggestShotsOutput>(),
   },
   async (input) : Promise<SuggestShotsOutput> => {
     const {output: aiOutput} = await prompt(input);
