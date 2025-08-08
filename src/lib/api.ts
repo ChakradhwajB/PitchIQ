@@ -1,4 +1,5 @@
-import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchEvent } from './types';
+
+import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchEvent, PlayerStats } from './types';
 import { suggestShots } from '@/ai/flows/suggest-shots';
 
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
@@ -21,7 +22,7 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
     }
     const data = await response.json();
     // TheSportsDB doesn't have a consistent error format, so we check for empty results.
-    if (!data || (data.teams === null) || (data.leagues === null) || (data.events === null) || (data.table === null)) {
+    if (!data || (data.teams === null) || (data.leagues === null) || (data.events === null) || (data.table === null) || (data.player === null)) {
         // console.warn(`No data found for endpoint: ${endpoint}`);
     }
     return data;
@@ -58,8 +59,8 @@ export async function getSeasons(): Promise<Season[]> {
   return [
     { year: "2024-2025" },
     { year: "2023-2024" },
-    { year: "2022-2023" },
-    { year: "2021-2022" },
+    { "year": "2022-2023" },
+    { "year": "2021-2022" },
   ];
 }
 
@@ -72,7 +73,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: t.strTeamBadge ? t.strTeamBadge + '/preview' : PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: t.strTeamBadge ? `${t.strTeamBadge}/preview` : PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -102,7 +103,7 @@ export async function getTeam(teamId: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: teamData.strTeamBadge ? teamData.strTeamBadge + '/preview' : PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: teamData.strTeamBadge ? `${teamData.strTeamBadge}/preview` : PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
     };
@@ -136,18 +137,22 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
     const leagueName = p.strLeague2 || p.strLeague || 'Unknown League';
     const leagueId = p.idLeague2 || p.idLeague || '0';
 
-    const statistics = currentTeam ? [{
+    const statistics: PlayerStats[] = currentTeam ? [{
         team: currentTeam,
         league: { id: leagueId, name: leagueName, logo: leagueId !== '0' ? (await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`))?.leagues?.[0]?.strBadge : undefined },
         games: { appearences: p.intSigned, minutes: 0, position: p.strPosition }, // Mocked/approximated data
         goals: { total: p.intGoals, assists: p.intAssists },
     }] : [];
 
-    // TheSportsDB doesn't have a clean career history endpoint. We can parse from available text fields if needed.
-    const career = [];
+    const career: { team: { name: string, logo: string }, start: string, end: string | null }[] = [];
     if (p.strTeam && p.dateBorn) {
-        career.push({ team: { name: p.strTeam, logo: currentTeam?.logo || '' }, start: p.dateSigned || new Date(p.dateBorn).getFullYear().toString(), end: 'Present' })
+        career.push({ team: { name: p.strTeam, logo: currentTeam?.logo || PLACEHOLDER_TEAM_IMAGE_URL }, start: p.dateSigned || new Date(p.dateBorn).getFullYear().toString(), end: 'Present' })
     }
+     // Mocking career data for demonstration purposes as the API doesn't provide a clean list
+    if (p.strTeam2 && p.strTeam2 !== p.strTeam) {
+        career.push({ team: { name: p.strTeam2, logo: PLACEHOLDER_TEAM_IMAGE_URL }, start: '2018', end: '2020' })
+    }
+
 
     return {
         id: p.idPlayer,
@@ -158,8 +163,8 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
         weight: p.strWeight,
         photo: p.strCutout || p.strThumb || PLACEHOLDER_IMAGE_URL,
         position: p.strPosition,
-        statistics: statistics as PlayerStats[],
-        career: career as { team: { name: string, logo: string }, start: string, end: string | null }[],
+        statistics: statistics,
+        career: career,
     };
 }
 
@@ -218,20 +223,21 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
 
   // TheSportsDB does not provide detailed events, lineups, or statistics in the free tier.
   // This data will be mocked or generated.
-  const mockLineupPlayer = (name: string, i: number) => ({ player: { id: `${name}-${i}`, name: `${name} ${i}`, pos: 'N/A', grid: null }});
+  const mockLineupPlayer = (name: string, i: number, teamId: string): LineupPlayer => ({ id: `${teamId}-${i}`, name: `${name} Player ${i}`, pos: 'N/A', grid: null });
+
   
-  const homeLineup = {
+  const homeLineup: Lineup = {
       team: homeTeam,
       formation: matchData.strHomeFormation || "N/A",
-      startXI: Array(11).fill(null).map((_, i) => mockLineupPlayer('Home', i)),
-      substitutes: Array(7).fill(null).map((_, i) => mockLineupPlayer('Sub', i)),
+      startXI: Array(11).fill(null).map((_, i) => ({ player: mockLineupPlayer('Home', i, homeTeam.id)})),
+      substitutes: Array(7).fill(null).map((_, i) => ({player: mockLineupPlayer('Sub', i, homeTeam.id)})),
   };
     
-  const awayLineup = {
+  const awayLineup: Lineup = {
       team: awayTeam,
       formation: matchData.strAwayFormation || "N/A",
-      startXI: Array(11).fill(null).map((_, i) => mockLineupPlayer('Away', i)),
-      substitutes: Array(7).fill(null).map((_, i) => mockLineupPlayer('Sub', i+7)),
+      startXI: Array(11).fill(null).map((_, i) => ({player: mockLineupPlayer('Away', i, awayTeam.id)})),
+      substitutes: Array(7).fill(null).map((_, i) => ({player: mockLineupPlayer('Sub', i+7, awayTeam.id)})),
   };
 
   const mockEvents: MatchEvent[] = [];
@@ -253,12 +259,6 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   }
 
   const statistics: MatchStats[] = [];
-  const statMapping: {[key: string]: string} = {
-      'intHomeShots': 'Total Shots',
-      'intAwayShots': 'Total Shots',
-      'intHomePossession': 'Ball Possession',
-      'intAwayPossession': 'Ball Possession'
-  };
   const homeStats: MatchStats['statistics'] = [];
   const awayStats: MatchStats['statistics'] = [];
 
@@ -272,7 +272,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   statistics.push({ team: { id: awayTeam.id, name: awayTeam.name }, statistics: awayStats });
 
   
-  const fullMatchData = {
+  const fullMatchData: Match = {
     id: matchData.idEvent,
     fixture: {
         id: matchData.idEvent,
@@ -287,18 +287,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
     statistics: statistics,
   };
 
-  // Stringify for AI flow
-   const matchForAI = {
-    ...fullMatchData,
-    teams: {
-        home: { id: homeTeam.id, name: homeTeam.name },
-        away: { id: awayTeam.id, name: awayTeam.name },
-    },
-    // Mock player lists for shot generation
-    lineups: [{ team: {id: homeTeam.id}, startXI: Array(11).fill(0).map((_,i) => ({player: {id: i, name: `Home Player ${i+1}`}}))}, { team: {id: awayTeam.id}, startXI: Array(11).fill(0).map((_,i) => ({player: {id: i+11, name: `Away Player ${i+1}`}}))}]
-  };
-  
-  return fullMatchData as Match;
+  return fullMatchData;
 }
 
 export async function getMatchShots(matchStatistics: string): Promise<Shot[]> {
@@ -401,5 +390,3 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
     statistics: [], // Full stats can be fetched on the player page
   }));
 }
-
-    

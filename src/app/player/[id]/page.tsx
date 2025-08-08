@@ -102,7 +102,7 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                         <CardTitle className="font-headline text-2xl">Performance Metrics</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {player.statistics.length > 0 ? player.statistics.map((stats, idx) => (
+                        {player.statistics && player.statistics.length > 0 ? player.statistics.map((stats, idx) => (
                            <PlayerStatBreakdown key={idx} stats={stats} />
                         )) : (
                             <p className="text-muted-foreground">Statistics for this player are not available.</p>
@@ -128,28 +128,15 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                     <CardContent>
                          {player.career && player.career.length > 0 ? (
                             <ul className="space-y-4">
-                                {/* Current Team */}
-                                {currentTeam && (
-                                <>
-                                <li className="flex items-center gap-4">
-                                    <Image src={currentTeam.logo} alt={currentTeam.name} width={40} height={40} data-ai-hint="team logo"/>
-                                    <div>
-                                        <p className="font-bold">{currentTeam.name}</p>
-                                        <p className="text-sm text-muted-foreground">{player.career?.[0].start} - Present</p>
-                                    </div>
-                                    <ArrowRightCircle className="ml-auto h-5 w-5 text-primary" />
-                                </li>
-                                <Separator />
-                                </>
-                                )}
-                                {/* Past Teams */}
-                                {player.career?.map((club, idx) => (
-                                    <li key={idx} className="flex items-center gap-4 opacity-70">
-                                        <Image src={club.team.logo} alt={club.team.name} width={40} height={40} data-ai-hint="team logo"/>
+                                {/* Current Team is first in career array */}
+                                {player.career.map((club, idx) => (
+                                    <li key={idx} className={`flex items-center gap-4 ${idx > 0 ? 'opacity-70' : ''}`}>
+                                        <Image src={club.team.logo} alt={club.team.name} width={40} height={40} data-ai-hint="team logo" className="bg-white rounded-full p-1"/>
                                         <div>
-                                            <p className="font-medium">{club.team.name}</p>
-                                            <p className="text-sm text-muted-foreground">{club.start} - {club.end}</p>
+                                            <p className="font-bold">{club.team.name}</p>
+                                            <p className="text-sm text-muted-foreground">{club.start} - {club.end || 'Present'}</p>
                                         </div>
+                                         {idx === 0 && <ArrowRightCircle className="ml-auto h-5 w-5 text-primary" />}
                                     </li>
                                 ))}
                             </ul>
