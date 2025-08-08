@@ -387,7 +387,7 @@ export async function getFixturesByStage(leagueId: string, season: string, round
 
 export async function getFixturesByDate(date: string): Promise<Fixture[]> {
     // TheSportsDB API is limited for this. We'll try fetching for a major league.
-    const data = await fetchFromApi<{events: any[]}>(`eventsday.php?d=${date}`);
+    const data = await fetchFromApi<{events: any[]}>(`eventsday.php?d=${date}&s=Soccer`);
     if (!data || !data.events) return [];
 
     const fixtures = await Promise.all(data.events.map(async (f: any) => {
