@@ -19,7 +19,9 @@ function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: 
     )
 }
 
-function LineupDisplay({ lineup }: { lineup: Lineup }) {
+function LineupDisplay({ lineup }: { lineup?: Lineup }) {
+    if (!lineup) return null;
+
     return (
         <Card>
             <CardHeader>
@@ -91,7 +93,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: nu
     const sortedEvents = [...events].sort((a, b) => a.time.elapsed - b.time.elapsed);
 
     return (
-        <div className="relative">
+        <div className="relative pt-4">
              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-border"></div>
             {sortedEvents.map((event, i) => {
                 const isHomeEvent = event.team.id === homeTeamId;

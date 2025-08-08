@@ -1,4 +1,4 @@
-import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats, Fixture } from './types';
+import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, MatchTeam, PlayerStats, Fixture, Lineup } from './types';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
 const API_KEY = process.env.NEXT_PUBLIC_API_FOOTBALL_KEY;
@@ -163,7 +163,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   if (!data || data.length === 0) return undefined;
   const matchData = data[0];
 
-  const lineupsData = await fetchFromApi<any[]>(`fixtures/lineups?fixture=${matchId}`);
+  const lineupsData = await fetchFromApi<Lineup[]>(`fixtures/lineups?fixture=${matchId}`);
   
   return {
     fixture: matchData.fixture,
