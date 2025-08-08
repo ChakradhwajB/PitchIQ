@@ -42,12 +42,17 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestShotsOutputSchema},
   prompt: `You are an AI assistant that creates plausible shot map data for a soccer match based on its statistics.
 
-  Given the following match statistics, generate a list of shots. The number of shots for each team should roughly match their "Total Shots" statistic. The number of goals must match the final score. Distribute shots among the listed players. The shot coordinates (x, y) must be within the bounds of a standard soccer pitch (0-105 for x, 0-68 for y). Shots for the home team should originate from the left side of the pitch (x < 52.5) and shots for the away team from the right side (x > 52.5).
+  Given the following match statistics, generate a list of shots. 
+  - The number of shots for each team should roughly match their "Total Shots" statistic.
+  - The number of 'Goal' type shots must exactly match the final score for each team.
+  - Distribute shots among the listed players for each team.
+  - Shot coordinates (x, y) must be within the bounds of a standard soccer pitch (0-105 for x, 0-68 for y).
+  - Shots for the home team should generally be on one side of the pitch and away team shots on the other.
 
   Match Statistics:
   {{matchStatistics}}
 
-  Shots:
+  Generate the shots now.
   `,
 });
 
@@ -59,10 +64,21 @@ const suggestShotsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    // Filter shots to ensure they are within the pitch boundaries, just in case.
+    
+    // Post-process to ensure data integrity, as the AI might not be perfect.
     if (output?.shots) {
-        output.shots = output.shots.filter(shot => shot.x >= 0 && shot.x <= 105 && shot.y >= 0 && shot.y <= 68);
+        output.shots = output.shots.filter(shot => 
+            shot.x >= 0 && shot.x <= 105 && 
+            shot.y >= 0 && shot.y <= 68 &&
+            shot.teamId &&
+            shot.player?.id &&
+            shot.player?.name
+        );
+    } else {
+        // If the AI fails to return any shots, return an empty array.
+        return { shots: [] };
     }
-    return output!;
+    
+    return output;
   }
 );
