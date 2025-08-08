@@ -280,7 +280,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   const mockEvents: MatchEvent[] = [];
   if (matchData.strHomeGoalDetails) {
       matchData.strHomeGoalDetails.split(';').forEach((detail:string) => {
-          const parts = detail.match(/(\d+)'?\s*(.*)/);
+          const parts = detail.match(/(\\d+)'?\\s*(.*)/);
           if (parts) {
             mockEvents.push({ time: { elapsed: parts[1] }, team: {id: homeTeam.id, name: homeTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
           }
@@ -288,7 +288,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   }
    if (matchData.strAwayGoalDetails) {
       matchData.strAwayGoalDetails.split(';').forEach((detail:string) => {
-          const parts = detail.match(/(\d+)'?\s*(.*)/);
+          const parts = detail.match(/(\\d+)'?\\s*(.*)/);
           if (parts) {
             mockEvents.push({ time: { elapsed: parts[1] }, team: {id: awayTeam.id, name: awayTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
           }
@@ -357,7 +357,7 @@ export async function getPlayerHeatmap(playerId: string): Promise<HeatmapPoint[]
 export async function getFixturesByStage(leagueId: string, season: string, round: string): Promise<Fixture[]> {
     // TheSportsDB API doesn't support fetching by stage/round name in the same way.
     // We will fetch all matches for the season and filter if possible.
-    const roundNumber = round.match(/\d+/)?.[0];
+    const roundNumber = round.match(/\\d+/)?.[0];
     if (!roundNumber) return [];
 
     const data = await fetchFromApi<{events: any[]}>(`eventsround.php?id=${leagueId}&r=${roundNumber}&s=${season}`);
