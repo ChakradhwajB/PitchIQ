@@ -102,6 +102,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: nu
                                 <div className="flex-1 text-right pr-12">
                                      <div className="p-3 rounded-lg bg-card shadow-sm inline-block text-left">
                                         <p className="font-semibold">{event.player.name}</p>
+                                        <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
                                         <p className="text-xs text-muted-foreground">{event.detail}</p>
                                     </div>
                                 </div>
@@ -123,6 +124,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: nu
                                 <div className="flex-1 pl-12">
                                     <div className="p-3 rounded-lg bg-card shadow-sm inline-block text-left">
                                         <p className="font-semibold">{event.player.name}</p>
+                                        <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
                                         <p className="text-xs text-muted-foreground">{event.detail}</p>
                                     </div>
                                 </div>
