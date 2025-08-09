@@ -28,10 +28,10 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
   }
   try {
     const response = await fetch(`${API_BASE_URL}/${API_KEY}/${endpoint}`);
-    if (!response.ok) {
-      console.error(`API Error: ${response.status} ${response.statusText}`);
+    //if (!response.ok) {
+      //console.error(`API Error: ${response.status} ${response.statusText}`);
       // Don't return null immediately, let it proceed to the catch block if parsing fails.
-    }
+   // }
     
     // Check for empty response body before parsing JSON
     const text = await response.text();
@@ -104,7 +104,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,

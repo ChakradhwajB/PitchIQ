@@ -8,11 +8,12 @@ import type { Fixture } from '@/lib/types';
 import FixtureList from '@/components/fixture-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, AlertTriangle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function formatDateForApi(date: Date) {
   return format(date, 'yyyy-MM-dd');
@@ -20,8 +21,9 @@ function formatDateForApi(date: Date) {
 
 export default function MatchesPage() {
   const [fixtures, setFixtures] = React.useState<Fixture[]>([]);
-  const [loading, setLoading] = React.useState(false); // Default to false
+  const [loading, setLoading] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     // Set the initial date on the client to avoid hydration mismatch
@@ -34,10 +36,18 @@ export default function MatchesPage() {
     async function fetchData() {
       if (!selectedDate) return;
       setLoading(true);
-      const dateStr = formatDateForApi(selectedDate);
-      const fixturesData = await getFixturesByDate(dateStr);
-      setFixtures(fixturesData || []);
-      setLoading(false);
+      setError(null);
+      try {
+        const dateStr = formatDateForApi(selectedDate);
+        const fixturesData = await getFixturesByDate(dateStr);
+        setFixtures(fixturesData || []);
+      } catch (e) {
+        console.error(e);
+        setError('Could not fetch match data. Please try again later.');
+        setFixtures([]);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchData();
   }, [selectedDate]);
@@ -85,6 +95,12 @@ export default function MatchesPage() {
               <Skeleton className="h-20 w-full" />
               <Skeleton className="h-20 w-full" />
             </div>
+          ) : error ? (
+             <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>Matches cannot be displayed. There was an error fetching the data.</AlertDescription>
+            </Alert>
           ) : fixtures.length > 0 ? (
             <FixtureList fixtures={fixtures} />
           ) : (
