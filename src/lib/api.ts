@@ -30,7 +30,7 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
     const response = await fetch(`${API_BASE_URL}/${API_KEY}/${endpoint}`);
     if (!response.ok) {
       console.error(`API Error: ${response.status} ${response.statusText}`);
-      return null;
+      // Don't return null immediately, let it proceed to the catch block if parsing fails.
     }
     
     // Check for empty response body before parsing JSON
@@ -48,7 +48,7 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
     return data;
   } catch (error) {
     console.error(`Failed to fetch from ${endpoint}`, error);
-    return null;
+    throw error; // Re-throw the error to be handled by the caller
   }
 }
 
