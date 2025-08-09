@@ -1,5 +1,5 @@
 
-import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchStats, MatchEvent, LineupPlayer, TvEvent } from './types';
+import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchStats, MatchEvent, LineupPlayer, TvEvent, NewsArticle } from './types';
 
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 const API_KEY = process.env.NEXT_PUBLIC_THESPORTSDB_API_KEY;
@@ -324,9 +324,9 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
           let type: MatchEvent['type'] | null = null;
           const eventTypeStr = event.strTimeline;
 
-          if (eventTypeStr.includes('Goal')) type = 'Goal';
-          else if (eventTypeStr.includes('Card')) type = 'Card';
-          else if (eventTypeStr.includes('subst')) type = 'subst';
+          if (eventTypeStr.toLowerCase().includes('goal')) type = 'Goal';
+          else if (eventTypeStr.toLowerCase().includes('card')) type = 'Card';
+          else if (eventTypeStr.toLowerCase().includes('subst')) type = 'subst';
 
           if (type) {
               const team = event.idTeam === homeTeam.id ? homeTeam : awayTeam;
@@ -466,4 +466,19 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
     position: p.strPosition,
     statistics: [], // Full stats can be fetched on the player page
   }));
+}
+
+export async function getNews(): Promise<NewsArticle[]> {
+    try {
+        const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news');
+        if (!response.ok) {
+            console.error('Failed to fetch news');
+            return [];
+        }
+        const data = await response.json();
+        return data.articles;
+    } catch (error) {
+        console.error('Error fetching news:', error);
+        return [];
+    }
 }

@@ -34,7 +34,7 @@ export function Header() {
     { href: '/', label: 'Standings', disabled: false },
     { href: '/matches', label: 'Matches', disabled: false },
     { href: '/players', label: 'Players', disabled: false },
-    { href: '#', label: 'News', disabled: true },
+    { href: '/news', label: 'News', disabled: false },
   ];
 
   return (

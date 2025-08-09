@@ -186,3 +186,25 @@ export interface TvEvent {
     country: string;
     logo: string;
 }
+
+export interface NewsArticle {
+  id: number;
+  headline: string;
+  description: string;
+  published: string;
+  images: NewsImage[];
+  links: NewsLinks;
+}
+
+export interface NewsImage {
+  url: string;
+  width: number;
+  height: number;
+  caption: string;
+}
+
+export interface NewsLinks {
+  web: {
+    href: string;
+  };
+}

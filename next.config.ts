@@ -27,6 +27,12 @@ const nextConfig: NextConfig = {
         hostname: 'r2.thesportsdb.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'a.espncdn.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
