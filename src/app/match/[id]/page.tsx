@@ -119,7 +119,11 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-border"></div>
             {sortedEvents.map((event, i) => {
                 const isHomeEvent = event.team.id === homeTeamId;
-                const detailText = event.detail === 'Normal Goal' ? 'Goal' : event.detail;
+                let detailText = event.detail;
+                if (event.type === 'Goal') {
+                    detailText = 'GOAL!!!!!!';
+                }
+                
                 return (
                     <div key={i} className="relative flex items-center mb-8">
                         {isHomeEvent ? (
