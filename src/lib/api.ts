@@ -468,15 +468,43 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
   }));
 }
 
-export async function getNews(): Promise<NewsArticle[]> {
+export const NEWS_SOURCES: { [key: string]: { name: string, url: string } } = {
+    'all': { name: 'All Leagues', url: ''},
+    'eng.1': { name: 'Premier League', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news' },
+    'esp.1': { name: 'La Liga', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/news' },
+    'ger.1': { name: 'Bundesliga', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/news' },
+    'fra.1': { name: 'Ligue 1', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/news' },
+    'ita.1': { name: 'Serie A', url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/news' },
+};
+
+export async function getNews(leagueKey: string = 'all'): Promise<NewsArticle[]> {
     try {
-        const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news');
-        if (!response.ok) {
-            console.error('Failed to fetch news');
+        let urls: string[] = [];
+        if (leagueKey === 'all') {
+            urls = Object.values(NEWS_SOURCES).filter(s => s.url).map(s => s.url);
+        } else if (NEWS_SOURCES[leagueKey]) {
+            urls = [NEWS_SOURCES[leagueKey].url];
+        } else {
             return [];
         }
-        const data = await response.json();
-        return data.articles;
+
+        const responses = await Promise.all(urls.map(url => fetch(url)));
+        const allArticles: NewsArticle[] = [];
+
+        for (const response of responses) {
+            if (response.ok) {
+                const data = await response.json();
+                if (data.articles) {
+                    allArticles.push(...data.articles);
+                }
+            } else {
+                 console.error(`Failed to fetch news from ${response.url}`);
+            }
+        }
+
+        // Sort by published date, most recent first
+        return allArticles.sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
+
     } catch (error) {
         console.error('Error fetching news:', error);
         return [];
