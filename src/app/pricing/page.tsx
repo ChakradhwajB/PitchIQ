@@ -49,10 +49,10 @@ const tiers = [
 ];
 
 export default function PricingPage() {
-  const { user, isProUser, setProTierActivated } = useAuth();
+  const { user, plan, isProUser, updatePlan } = useAuth();
   const router = useRouter();
 
-  const handleCtaClick = (tierName: string) => {
+  const handleCtaClick = async (tierName: string) => {
     if (!user) {
         router.push('/login?redirect=/pricing');
         return;
@@ -60,15 +60,14 @@ export default function PricingPage() {
 
     if (tierName === 'Pro') {
       if (isProUser) return; // Already Pro, do nothing
-      // In a real app, this would trigger a payment flow.
-      setProTierActivated(true);
+      await updatePlan('pro');
       toast({
           title: 'Upgrade Successful!',
           description: "You've unlocked all Pro features. Enjoy!",
       });
     } else if (tierName === 'Free') {
       if (!isProUser) return; // Already Free, do nothing
-      setProTierActivated(false);
+      await updatePlan('free');
        toast({
         title: 'Downgrade Successful',
         description: "You have been returned to the Free plan.",
