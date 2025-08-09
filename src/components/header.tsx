@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -73,7 +73,10 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
-              <div className="flex h-full flex-col gap-6 p-6">
+                <SheetHeader className="p-6">
+                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                </SheetHeader>
+              <div className="flex h-full flex-col gap-6 p-6 pt-0">
                 <Link href="/" className="flex items-center gap-2">
                     <LogoIcon className="h-7 w-7 text-primary" />
                     <span className="text-xl font-bold font-headline text-foreground">
