@@ -501,12 +501,18 @@ export async function getNews(leagueKey: string = 'all'): Promise<NewsArticle[]>
                  console.error(`Failed to fetch news from ${response.url}`);
             }
         }
+        
+        // De-duplicate articles by ID
+        const uniqueArticles = Array.from(new Map(allArticles.map(article => [article.id, article])).values());
+
 
         // Sort by published date, most recent first
-        return allArticles.sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
+        return uniqueArticles.sort((a, b) => new Date(b.published).getTime() - new Date(a.published).getTime());
 
     } catch (error) {
         console.error('Error fetching news:', error);
         return [];
     }
 }
+
+    
