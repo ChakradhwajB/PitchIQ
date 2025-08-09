@@ -20,7 +20,7 @@ function formatDateForApi(date: Date) {
 
 export default function MatchesPage() {
   const [fixtures, setFixtures] = React.useState<Fixture[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false); // Default to false
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
 
   React.useEffect(() => {
@@ -28,7 +28,7 @@ export default function MatchesPage() {
     if (selectedDate === undefined) {
       setSelectedDate(new Date());
     }
-  }, [selectedDate]);
+  }, []); // Run only once on mount
 
   React.useEffect(() => {
     async function fetchData() {
@@ -79,7 +79,7 @@ export default function MatchesPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading || !selectedDate ? (
+          {loading ? (
             <div className="space-y-4">
               <Skeleton className="h-20 w-full" />
               <Skeleton className="h-20 w-full" />
