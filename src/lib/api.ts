@@ -104,7 +104,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: cleanImageUrl(t.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -174,9 +174,13 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
     const leagueName = p.strLeague2 || p.strLeague || 'Unknown League';
     const leagueId = p.idLeague2 || p.idLeague || '0';
 
+    const leagueDetailsData = leagueId !== '0' ? await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`) : null;
+    const leagueLogo = leagueDetailsData?.leagues?.[0]?.strBadge;
+
+
     const statistics: PlayerStats[] = currentTeam ? [{
         team: currentTeam,
-        league: { id: leagueId, name: leagueName, logo: leagueId !== '0' ? cleanImageUrl((await fetchFromApi<{leagues: any[]}>(`lookupleague.php?id=${leagueId}`))?.leagues?.[0]?.strBadge) || undefined : undefined },
+        league: { id: leagueId, name: leagueName, logo: cleanImageUrl(leagueLogo) || undefined },
         games: { appearences: p.intSigned, minutes: 0, position: p.strPosition }, // Mocked/approximated data
         goals: { total: p.intGoals, assists: p.intAssists },
     }] : [];
@@ -206,7 +210,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
 }
 
 export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
-    const data = await fetchFromApi<{results: any[], events: any[]}>(`eventslast.php?id=${teamId}`);
+    const data = await fetchFromApi<{results: any[]}>(`eventslast.php?id=${teamId}`);
     if (!data || !data.results) return [];
 
     const fixtures = await Promise.all(data.results.map(async (f:any) => {
