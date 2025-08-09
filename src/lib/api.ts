@@ -168,6 +168,8 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
     if (!data || !data.players) return undefined;
 
     const p = data.players[0];
+    if (!p) return undefined;
+
     const currentTeam = p.idTeam ? await getTeam(p.strTeam) : undefined;
     
     // TheSportsDB has multiple league fields, let's try to find the most relevant one
@@ -255,6 +257,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   const data = await fetchFromApi<{events: any[]}>(`lookupevent.php?id=${matchId}`);
   if (!data || !data.events) return undefined;
   const matchData = data.events[0];
+  if (!matchData) return undefined;
 
   const [homeTeam, awayTeam] = await Promise.all([
     getTeam(matchData.strHomeTeam),
