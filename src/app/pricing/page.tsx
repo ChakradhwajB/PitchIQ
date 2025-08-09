@@ -112,11 +112,13 @@ export default function PricingPage() {
             <CardFooter>
               {tier.name === 'Pro' ? (
                 <Button className="w-full" onClick={handleUpgrade} disabled={isProUser}>
-                    {isProUser ? 'You are a Pro' : tier.cta}
+                    {isProUser ? 'Your Current Plan' : tier.cta}
                 </Button>
               ) : (
-                <Button asChild className="w-full" variant="outline" disabled={!!user}>
-                    <Link href={tier.ctaLink}>{!!user ? 'You are on the Free Plan' : tier.cta}</Link>
+                <Button asChild className="w-full" variant="outline" disabled={!user || isProUser}>
+                  <Link href={tier.ctaLink}>
+                    {isProUser ? 'Upgrade to Pro to Keep Features' : (!user ? tier.cta : 'Your Current Plan')}
+                  </Link>
                 </Button>
               )}
             </CardFooter>
