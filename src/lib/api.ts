@@ -130,7 +130,7 @@ export async function getTeam(teamName: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: cleanImageUrl(teamData.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: cleanImageUrl(teamData.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
         description: teamData.strDescriptionEN,
@@ -281,12 +281,14 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
       const processTeamLineup = (teamType: 'Home' | 'Away'): Lineup => {
           const team = teamType === 'Home' ? homeTeam : awayTeam;
           const formation = teamType === 'Home' ? matchData.strHomeFormation : matchData.strAwayFormation;
+          const mapPlayer = (p: any) => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } });
+          
           const startXI: { player: LineupPlayer }[] = lineupData.lineup
-              .filter(p => p.idTeam === team.id && p.strSide === 'Start' && p.strPosition)
-              .map(p => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } }));
+              .filter(p => p.idTeam === team.id && p.strSubstitute === 'No')
+              .map(mapPlayer);
           const substitutes: { player: LineupPlayer }[] = lineupData.lineup
-              .filter(p => p.idTeam === team.id && p.strSide === 'Substitutes')
-              .map(p => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } }));
+              .filter(p => p.idTeam === team.id && p.strSubstitute === 'Yes')
+              .map(mapPlayer);
           
           return { team: team, formation: formation || null, startXI, substitutes };
       };
