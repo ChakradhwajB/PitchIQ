@@ -4,7 +4,7 @@ import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer }
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
-import { Clock, Goal, Replace, Square, Users, Trophy, Shirt } from 'lucide-react';
+import { Clock, Goal, Replace, Square, Users, Trophy, Shirt, Tv } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -253,6 +253,24 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
             <div className="space-y-8">
                 {/* Match Stats */}
                 <StatsTable stats={match.statistics} homeTeamId={match.teams.home.id} awayTeamId={match.teams.away.id} />
+
+                {/* Where to Watch */}
+                {match.tvEvents && match.tvEvents.length > 0 && (
+                    <Card>
+                        <CardHeader><CardTitle className="font-headline text-xl flex items-center gap-2"><Tv className="w-5 h-5"/> Where to Watch</CardTitle></CardHeader>
+                        <CardContent>
+                            <ul className="space-y-3">
+                                {match.tvEvents.map(event => (
+                                    <li key={event.id} className="flex items-center gap-3 text-sm">
+                                        {event.logo && <Image src={event.logo} alt={event.channel} width={24} height={24} className="bg-white rounded-sm p-0.5 object-contain" data-ai-hint="channel logo"/>}
+                                        <span className="font-medium">{event.channel}</span>
+                                        <span className="text-muted-foreground ml-auto">{event.country}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </div>
     </div>

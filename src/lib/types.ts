@@ -97,6 +97,7 @@ export interface Match {
   events: MatchEvent[];
   lineups: Lineup[];
   statistics: MatchStats[];
+  tvEvents?: TvEvent[];
 }
 
 export interface MatchEvent {
@@ -177,4 +178,11 @@ export interface Fixture {
     result?: 'W' | 'D' | 'L' | null;
     score?: string | null;
     type?: string;
+}
+
+export interface TvEvent {
+    id: string;
+    channel: string;
+    country: string;
+    logo: string;
 }

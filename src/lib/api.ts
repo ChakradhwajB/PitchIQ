@@ -1,5 +1,5 @@
 
-import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchStats, MatchEvent, LineupPlayer } from './types';
+import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchStats, MatchEvent, LineupPlayer, TvEvent } from './types';
 
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 const API_KEY = process.env.NEXT_PUBLIC_THESPORTSDB_API_KEY;
@@ -249,17 +249,31 @@ export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
     return fixtures.slice(-10); 
 }
 
+export async function getMatchTvInfo(matchId: string): Promise<TvEvent[]> {
+    const data = await fetchFromApi<{tvevent: any[]}>(`lookuptv.php?id=${matchId}`);
+    if (!data || !data.tvevent) return [];
+
+    return data.tvevent.map((event: any) => ({
+        id: event.id,
+        channel: event.strChannel,
+        country: event.strCountry,
+        logo: cleanImageUrl(event.strLogo),
+    }));
+}
+
 export async function getMatch(matchId: string): Promise<Match | undefined> {
   const eventDataPromise = fetchFromApi<{events: any[]}>(`lookupevent.php?id=${matchId}`);
   const lineupDataPromise = fetchFromApi<{lineup: any[]}>(`lookuplineup.php?id=${matchId}`);
   const timelineDataPromise = fetchFromApi<{timeline: any[]}>(`lookuptimeline.php?id=${matchId}`);
   const statsDataPromise = fetchFromApi<{eventstats: any[]}>(`lookupeventstats.php?id=${matchId}`);
+  const tvDataPromise = getMatchTvInfo(matchId);
   
-  const [eventData, lineupData, timelineData, statsData] = await Promise.all([
+  const [eventData, lineupData, timelineData, statsData, tvEvents] = await Promise.all([
       eventDataPromise,
       lineupDataPromise,
       timelineDataPromise,
-      statsDataPromise
+      statsDataPromise,
+      tvDataPromise,
   ]);
 
   if (!eventData || !eventData.events) return undefined;
@@ -362,6 +376,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
     events: events,
     lineups: lineups,
     statistics: statistics,
+    tvEvents: tvEvents,
   };
 
   return fullMatchData;
