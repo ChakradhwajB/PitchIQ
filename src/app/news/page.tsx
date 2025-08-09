@@ -92,6 +92,7 @@ export default function NewsPage() {
     async function fetchNews() {
       setLoading(true);
       setError(null);
+      setArticles([]); // Clear previous articles before fetching new ones
       try {
         const newsData = await getNews(selectedLeague);
         setArticles(newsData);
