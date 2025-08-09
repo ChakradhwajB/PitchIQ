@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -24,7 +25,14 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const {
     register,
@@ -53,6 +61,10 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (user) {
+    return null; // Don't render the form if the user is logged in and redirecting
+  }
 
   return (
     <div className="container mx-auto flex min-h-[calc(100vh-15rem)] items-center justify-center px-4 py-8">

@@ -24,6 +24,8 @@ const tiers = [
       'Read the Latest News',
     ],
     cta: 'Sign Up for Free',
+    ctaLoggedIn: 'Your Current Plan',
+    ctaUpgrade: 'Downgrade to Free',
     ctaLink: '/signup',
     primary: false,
   },
@@ -40,6 +42,7 @@ const tiers = [
       'Ad-free Experience',
     ],
     cta: 'Upgrade to Pro',
+    ctaLoggedIn: 'Your Current Plan',
     ctaLink: '#', // Placeholder for payment integration
     primary: true,
   },
@@ -49,18 +52,28 @@ export default function PricingPage() {
   const { user, isProUser, setProTierActivated } = useAuth();
   const router = useRouter();
 
-  const handleUpgrade = () => {
+  const handleCtaClick = (tierName: string) => {
     if (!user) {
         router.push('/login?redirect=/pricing');
         return;
     }
-    // In a real app, this would trigger a payment flow with Stripe, etc.
-    // For now, we just simulate the upgrade.
-    setProTierActivated(true);
-    toast({
-        title: 'Upgrade Successful!',
-        description: "You've unlocked all Pro features. Enjoy!",
-    });
+
+    if (tierName === 'Pro') {
+      if (isProUser) return; // Already Pro, do nothing
+      // In a real app, this would trigger a payment flow.
+      setProTierActivated(true);
+      toast({
+          title: 'Upgrade Successful!',
+          description: "You've unlocked all Pro features. Enjoy!",
+      });
+    } else if (tierName === 'Free') {
+      if (!isProUser) return; // Already Free, do nothing
+      setProTierActivated(false);
+       toast({
+        title: 'Downgrade Successful',
+        description: "You have been returned to the Free plan.",
+      });
+    }
   }
 
   return (
@@ -75,55 +88,56 @@ export default function PricingPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {tiers.map((tier) => (
-          <Card
-            key={tier.name}
-            className={cn(
-              'flex flex-col shadow-lg rounded-xl',
-              tier.primary && 'border-primary border-2 relative'
-            )}
-          >
-            {tier.primary && (
-                <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center">
-                    <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
-                        <Star className="w-4 h-4" />
-                        Most Popular
+        {tiers.map((tier) => {
+            const isCurrentUserPlan = (tier.name === 'Pro' && isProUser) || (tier.name === 'Free' && !isProUser);
+          
+            return (
+                <Card
+                    key={tier.name}
+                    className={cn(
+                    'flex flex-col shadow-lg rounded-xl',
+                    tier.primary && 'border-primary border-2 relative'
+                    )}
+                >
+                    {tier.primary && (
+                        <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center">
+                            <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                                <Star className="w-4 h-4" />
+                                Most Popular
+                            </div>
+                        </div>
+                    )}
+                    <CardHeader className="text-center">
+                    <CardTitle className="font-headline text-3xl">{tier.name}</CardTitle>
+                    <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-4xl font-bold">{tier.price}</span>
+                        <span className="text-muted-foreground">{tier.frequency}</span>
                     </div>
-                </div>
-            )}
-            <CardHeader className="text-center">
-              <CardTitle className="font-headline text-3xl">{tier.name}</CardTitle>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl font-bold">{tier.price}</span>
-                <span className="text-muted-foreground">{tier.frequency}</span>
-              </div>
-              <CardDescription className="pt-2">{tier.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <ul className="space-y-4">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              {tier.name === 'Pro' ? (
-                <Button className="w-full" onClick={handleUpgrade} disabled={isProUser}>
-                    {isProUser ? 'Your Current Plan' : tier.cta}
-                </Button>
-              ) : (
-                <Button asChild className="w-full" variant="outline" disabled={!user || isProUser}>
-                  <Link href={tier.ctaLink}>
-                    {isProUser ? 'Upgrade to Pro to Keep Features' : (!user ? tier.cta : 'Your Current Plan')}
-                  </Link>
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
+                    <CardDescription className="pt-2">{tier.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                    <ul className="space-y-4">
+                        {tier.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-3">
+                            <Check className="w-5 h-5 text-green-500" />
+                            <span className="text-muted-foreground">{feature}</span>
+                        </li>
+                        ))}
+                    </ul>
+                    </CardContent>
+                    <CardFooter>
+                        <Button
+                            className="w-full"
+                            onClick={() => handleCtaClick(tier.name)}
+                            disabled={user && isCurrentUserPlan}
+                            variant={tier.primary ? 'default' : 'outline'}
+                        >
+                            {user ? (isCurrentUserPlan ? 'Your Current Plan' : (tier.name === 'Pro' ? 'Upgrade to Pro' : 'Downgrade to Free')) : 'Sign Up to Choose'}
+                        </Button>
+                    </CardFooter>
+                </Card>
+            )
+        })}
       </div>
     </div>
   );
