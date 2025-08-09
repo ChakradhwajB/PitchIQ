@@ -96,7 +96,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: cleanImageUrl(t.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -130,7 +130,7 @@ export async function getTeam(teamName: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: cleanImageUrl(teamData.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: cleanImageUrl(teamData.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
         description: teamData.strDescriptionEN,
@@ -266,10 +266,14 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   const matchData = eventData.events[0];
   if (!matchData) return undefined;
   
-  const homeTeam = await getTeam(matchData.strHomeTeam);
-  const awayTeam = await getTeam(matchData.strAwayTeam);
+  const homeTeamData = await getTeam(matchData.strHomeTeam);
+  const awayTeamData = await getTeam(matchData.strAwayTeam);
   
-  if (!homeTeam || !awayTeam) return undefined;
+  if (!homeTeamData || !awayTeamData) return undefined;
+
+  const homeTeam: MatchTeam = { id: homeTeamData.id, name: homeTeamData.name, logo: homeTeamData.logo };
+  const awayTeam: MatchTeam = { id: awayTeamData.id, name: awayTeamData.name, logo: awayTeamData.logo };
+
 
   // Process Lineups
   const lineups: Lineup[] = [];
@@ -278,10 +282,10 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
           const team = teamType === 'Home' ? homeTeam : awayTeam;
           const formation = teamType === 'Home' ? matchData.strHomeFormation : matchData.strAwayFormation;
           const startXI: { player: LineupPlayer }[] = lineupData.lineup
-              .filter(p => p.strTeam === team.name && p.strSide === 'Start')
+              .filter(p => p.idTeam === team.id && p.strSide === 'Start' && p.strPosition)
               .map(p => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } }));
           const substitutes: { player: LineupPlayer }[] = lineupData.lineup
-              .filter(p => p.strTeam === team.name && p.strSide === 'Substitutes')
+              .filter(p => p.idTeam === team.id && p.strSide === 'Substitutes')
               .map(p => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } }));
           
           return { team: team, formation: formation || null, startXI, substitutes };
@@ -303,7 +307,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
               const team = event.idTeam === homeTeam.id ? homeTeam : awayTeam;
               events.push({
                   time: { elapsed: event.intTime },
-                  team: { id: team.id, name: team.name },
+                  team: { id: team.id, name: team.name, logo: team.logo },
                   player: { id: event.idPlayer, name: event.strPlayer },
                   type: type,
                   detail: event.strEvent
@@ -330,10 +334,10 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
     };
     
     if (homeStatsRaw) {
-        statistics.push({ team: { id: homeTeam.id, name: homeTeam.name }, statistics: mapStats(homeStatsRaw) });
+        statistics.push({ team: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo }, statistics: mapStats(homeStatsRaw) });
     }
     if (awayStatsRaw) {
-        statistics.push({ team: { id: awayTeam.id, name: awayTeam.name }, statistics: mapStats(awayStatsRaw) });
+        statistics.push({ team: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo }, statistics: mapStats(awayStatsRaw) });
     }
   }
 

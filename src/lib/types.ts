@@ -106,6 +106,7 @@ export interface MatchEvent {
   team: {
     id: string;
     name: string;
+    logo: string;
   };
   player: {
     id: string;
@@ -135,6 +136,7 @@ export interface MatchStats {
   team: {
     id: string;
     name: string;
+    logo: string;
   };
   statistics: {
     type: string;
