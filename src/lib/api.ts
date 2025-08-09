@@ -181,8 +181,8 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
     }] : [];
 
     const career: { team: { name: string, logo: string }, start: string, end: string | null }[] = [];
-    if (p.strTeam && p.dateBorn) {
-        career.push({ team: { name: p.strTeam, logo: currentTeam?.logo || PLACEHOLDER_TEAM_IMAGE_URL }, start: p.dateSigned || new Date(p.dateBorn).getFullYear().toString(), end: 'Present' })
+    if (p.strTeam && p.dateSigned) {
+        career.push({ team: { name: p.strTeam, logo: currentTeam?.logo || PLACEHOLDER_TEAM_IMAGE_URL }, start: p.dateSigned, end: 'Present' })
     }
      // Mocking career data for demonstration purposes as the API doesn't provide a clean list
     if (p.strTeam2 && p.strTeam2 !== p.strTeam) {
@@ -281,7 +281,15 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
       const processTeamLineup = (teamType: 'Home' | 'Away'): Lineup => {
           const team = teamType === 'Home' ? homeTeam : awayTeam;
           const formation = teamType === 'Home' ? matchData.strHomeFormation : matchData.strAwayFormation;
-          const mapPlayer = (p: any) => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } });
+          const mapPlayer = (p: any): { player: LineupPlayer } => ({ 
+              player: { 
+                  id: p.idPlayer, 
+                  name: p.strPlayer, 
+                  pos: p.strPosition, 
+                  grid: null, // TheSportsDB doesn't provide grid
+                  number: p.intSquadNumber 
+              } 
+          });
           
           const startXI: { player: LineupPlayer }[] = lineupData.lineup
               .filter(p => p.idTeam === team.id && p.strSubstitute === 'No')

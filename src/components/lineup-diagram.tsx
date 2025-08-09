@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Lineup } from '@/lib/types';
@@ -94,7 +95,15 @@ export default function LineupDiagram({ lineup }: LineupDiagramProps) {
                 </div>
                 <div className="absolute inset-0">
                     {lineup.startXI.map(({ player }) => {
-                        if (!player.grid) return null; // Can't render without grid positions
+                        if (!player.grid) return (
+                            // Fallback for when grid isn't available - list players
+                            <div key={player.id} className="text-xs text-white p-1">
+                                <Link href={`/player/${player.id}`} className="hover:text-primary transition-colors hover:underline">
+                                    {player.name} ({player.pos})
+                                </Link>
+                            </div>
+                        );
+
                         const { x, y } = getPositionCoords(player.grid, lineup.formation || '4-3-3', isHome);
                         
                         return (
@@ -106,7 +115,7 @@ export default function LineupDiagram({ lineup }: LineupDiagramProps) {
                                     >
                                        <Link href={`/player/${player.id}`} className="flex flex-col items-center group">
                                             <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold border-2 border-white shadow-lg group-hover:scale-110 transition-transform">
-                                                {player.pos}
+                                                {player.pos[0]}
                                             </div>
                                             <span className="text-xs mt-1 px-2 py-0.5 bg-background/80 rounded-md truncate max-w-20">{player.name.split(' ').pop()}</span>
                                         </Link>
@@ -114,7 +123,7 @@ export default function LineupDiagram({ lineup }: LineupDiagramProps) {
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p className="font-bold">{player.name}</p>
-                                    <p>Position: {positionMap[player.pos] || player.pos}</p>
+                                    <p>Position: {positionMap[player.pos[0]] || player.pos}</p>
                                 </TooltipContent>
                             </Tooltip>
                         );
