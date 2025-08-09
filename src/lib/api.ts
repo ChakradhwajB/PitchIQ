@@ -1,6 +1,5 @@
 
 import type { League, Season, Standing, Team, Player, Match, Shot, HeatmapPoint, Fixture, Lineup, MatchTeam, MatchStats, MatchEvent, LineupPlayer } from './types';
-import { suggestShots } from '@/ai/flows/suggest-shots';
 
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 const API_KEY = process.env.NEXT_PUBLIC_THESPORTSDB_API_KEY;
@@ -356,20 +355,6 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   return fullMatchData;
 }
 
-export async function getMatchShots(matchStatistics: string): Promise<Shot[]> {
-    try {
-        const result = await suggestShots({ matchStatistics });
-        if (result.shots) {
-            // TheSportsDB team IDs are strings
-            return result.shots.map(s => ({...s, teamId: String(s.teamId), player: {...s.player, id: String(s.player.id)} }));
-        }
-    } catch (e) {
-        console.error('Failed to generate shots from AI, returning empty array.', e);
-    }
-    return [];
-}
-
-
 export async function getPlayerHeatmap(playerId: string): Promise<HeatmapPoint[]> {
     // This API does not provide heatmap data. Using mock data.
     console.warn("Player heatmap data is mocked.");
@@ -455,5 +440,3 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
     statistics: [], // Full stats can be fetched on the player page
   }));
 }
-
-    

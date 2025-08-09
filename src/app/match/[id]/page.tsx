@@ -1,4 +1,4 @@
-import { getMatch, getMatchShots } from '@/lib/api';
+import { getMatch } from '@/lib/api';
 import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer } from '@/lib/types';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +6,6 @@ import { notFound } from 'next/navigation';
 import { Clock, Goal, Replace, Square, Users, Trophy } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import SmartHighlights from '@/components/smart-highlights';
-import ShotMap from '@/components/shot-map';
 import Link from 'next/link';
 import LineupDiagram from '@/components/lineup-diagram';
 
@@ -159,8 +157,6 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
     notFound();
   }
   
-  const shots = await getMatchShots(JSON.stringify(match));
-
   const homeLineup = match.lineups.find(l => l.team.id === match.teams.home.id);
   const awayLineup = match.lineups.find(l => l.team.id === match.teams.away.id);
 
@@ -220,22 +216,8 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
                         <Timeline events={match.events} homeTeamId={match.teams.home.id} />
                     </CardContent>
                 </Card>
-                {/* Shot Map */}
-                <Card>
-                    <CardHeader><CardTitle className="font-headline text-xl">Shot Map</CardTitle></CardHeader>
-                    <CardContent>
-                       <ShotMap 
-                         shots={shots} 
-                         homeTeam={match.teams.home}
-                         awayTeam={match.teams.away}
-                        />
-                    </CardContent>
-                </Card>
             </div>
             <div className="space-y-8">
-                {/* Smart Highlights */}
-                <SmartHighlights matchStatistics={JSON.stringify(match, null, 2)} />
-
                 {/* Match Stats */}
                 <StatsTable stats={match.statistics} homeTeamId={match.teams.home.id} awayTeamId={match.teams.away.id} />
             </div>

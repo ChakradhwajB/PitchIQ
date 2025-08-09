@@ -1,123 +1,61 @@
-'use server';
-
-/**
- * @fileOverview This file defines a Genkit flow for generating plausible shot data for a soccer match based on its statistics.
- *
- * - suggestShots - A function that takes match statistics and returns a generated shot map.
- * - SuggestShotsInput - The input type for the suggestShots function.
- * - SuggestShotsOutput - The return type for the suggestShots function.
- */
-
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const SuggestShotsInputSchema = z.object({
-  matchStatistics: z.string().describe('Comprehensive soccer match statistics in JSON format, including teams, goals, and player lists.'),
-});
-export type SuggestShotsInput = z.infer<typeof SuggestShotsInputSchema>;
-
-// Define the final output structure we want.
-const ShotSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  teamId: z.number(),
-  type: z.enum(['Goal', 'Saved', 'Miss']),
-  player: z.object({
-    id: z.number(),
-    name: z.string(),
-  }),
-});
-
-export type SuggestShotsOutput = {
-    shots: z.infer<typeof ShotSchema>[];
-}
-
-export async function suggestShots(input: SuggestShotsInput): Promise<SuggestShotsOutput> {
-  return suggestShotsFlow(input);
-}
-
-// A simpler schema for the AI to output: just an array of strings.
-const aIShotOutputSchema = z.object({
-    shots: z.array(z.string()).describe('List of shots as comma-separated strings: "x,y,teamId,type,playerId,playerName"'),
-});
-
-const prompt = ai.definePrompt({
-  name: 'suggestShotsPrompt',
-  input: {schema: SuggestShotsInputSchema},
-  output: {schema: aIShotOutputSchema }, // The AI's output is now a simple list of strings.
-  prompt: `You are an AI assistant that creates plausible shot map data for a soccer match based on its statistics.
-
-  Given the following match statistics, generate a list of shots. 
-  - Each shot must be a comma-separated string with the format: "x,y,teamId,type,playerId,playerName".
-  - 'type' must be one of: Goal, Saved, Miss.
-  - The number of 'Goal' type shots must exactly match the final score for each team.
-  - The total number of shots for each team should roughly match their "Total Shots" statistic, if available.
-  - Distribute shots among the listed players for each team.
-  - Shot coordinates (x, y) must be within the bounds of a standard soccer pitch (0-105 for x, 0-68 for y).
-  - Home team shots should be on one half (x > 52.5), away team on the other (x < 52.5).
-
-  Match Statistics:
-  {{matchStatistics}}
-
-  Generate the shots as a list of comma-separated strings now.
-  `,
-});
-
-const suggestShotsFlow = ai.defineFlow(
-  {
-    name: 'suggestShotsFlow',
-    inputSchema: SuggestShotsInputSchema,
-    outputSchema: z.custom<SuggestShotsOutput>(),
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 9002",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
-  async (input) : Promise<SuggestShotsOutput> => {
-    const {output: aiOutput} = await prompt(input);
-    
-    if (!aiOutput || !aiOutput.shots) {
-      // If the AI fails to return anything, return an empty array.
-      return { shots: [] };
-    }
-
-    const parsedShots: z.infer<typeof ShotSchema>[] = [];
-    
-    for (const shotString of aiOutput.shots) {
-      try {
-        const parts = shotString.split(',');
-        if (parts.length < 6) continue;
-
-        const [xStr, yStr, teamIdStr, type, playerIdStr, ...playerNameParts] = parts;
-        const playerName = playerNameParts.join(',').trim(); // Handle names with commas
-
-        const x = parseFloat(xStr);
-        const y = parseFloat(yStr);
-        const teamId = parseInt(teamIdStr, 10);
-        const playerId = parseInt(playerIdStr, 10);
-
-        // Validate the parsed data
-        if (
-          !isNaN(x) && x >= 0 && x <= 105 &&
-          !isNaN(y) && y >= 0 && y <= 68 &&
-          !isNaN(teamId) &&
-          !isNaN(playerId) &&
-          ['Goal', 'Saved', 'Miss'].includes(type) &&
-          playerName
-        ) {
-          parsedShots.push({
-            x,
-            y,
-            teamId,
-            type: type as 'Goal' | 'Saved' | 'Miss',
-            player: {
-              id: playerId,
-              name: playerName,
-            },
-          });
-        }
-      } catch (e) {
-        // Ignore lines that fail to parse
-        console.warn(`Could not parse shot string: "${shotString}"`, e);
-      }
-    }
-    
-    return { shots: parsedShots };
+  "dependencies": {
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "lucide-react": "^0.475.0",
+    "next": "15.3.3",
+    "patch-package": "^8.0.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.1",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
-);
+}

@@ -1,54 +1,61 @@
-'use server';
-
-/**
- * @fileOverview This file defines a Genkit flow for generating smart highlights and insights based on soccer match statistics.
- *
- * - suggestMatchInsights - A function that takes match statistics as input and returns AI-powered insights.
- * - SuggestMatchInsightsInput - The input type for the suggestMatchInsights function.
- * - SuggestMatchInsightsOutput - The return type for the suggestMatchInsights function.
- */
-
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-const SuggestMatchInsightsInputSchema = z.object({
-  matchStatistics: z.string().describe('Comprehensive soccer match statistics in JSON format.'),
-});
-export type SuggestMatchInsightsInput = z.infer<typeof SuggestMatchInsightsInputSchema>;
-
-const SuggestMatchInsightsOutputSchema = z.object({
-  insights: z.array(z.string()).describe('A list of AI-generated insights based on the match statistics.'),
-});
-export type SuggestMatchInsightsOutput = z.infer<typeof SuggestMatchInsightsOutputSchema>;
-
-export async function suggestMatchInsights(input: SuggestMatchInsightsInput): Promise<SuggestMatchInsightsOutput> {
-  return suggestMatchInsightsFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'suggestMatchInsightsPrompt',
-  input: {schema: SuggestMatchInsightsInputSchema},
-  output: {schema: SuggestMatchInsightsOutputSchema},
-  prompt: `You are an AI assistant that analyzes soccer match statistics and provides key insights and talking points.
-
-  Given the following match statistics, generate a list of relevant, interesting, and concise insights about the match and player performance.
-  Focus on the most important and unusual aspects that would be of interest to a soccer fan.
-
-  Match Statistics:
-  {{matchStatistics}}
-
-  Insights:
-  `
-});
-
-const suggestMatchInsightsFlow = ai.defineFlow(
-  {
-    name: 'suggestMatchInsightsFlow',
-    inputSchema: SuggestMatchInsightsInputSchema,
-    outputSchema: SuggestMatchInsightsOutputSchema,
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 9002",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  "dependencies": {
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "lucide-react": "^0.475.0",
+    "next": "15.3.3",
+    "patch-package": "^8.0.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.1",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
-);
+}
