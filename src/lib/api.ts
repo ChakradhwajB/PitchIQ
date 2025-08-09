@@ -10,10 +10,9 @@ const PLACEHOLDER_TEAM_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/pl
 
 // Helper to clean up image URLs from TheSportsDB
 function cleanImageUrl(url: string | null | undefined): string {
-    if (!url || typeof url !== 'string') return '';
+    if (!url) return '';
     // The API sometimes returns URLs with /preview appended, which is not a direct image link.
-    const cleanedUrl = url.endsWith('/preview') ? url.slice(0, -8) : url;
-    return cleanedUrl || '';
+    return url.replace(/\/preview$/, '');
 }
 
 
@@ -21,6 +20,7 @@ function cleanImageUrl(url: string | null | undefined): string {
 async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
   if (!API_KEY) {
     console.error("TheSportsDB API key is missing. Add NEXT_PUBLIC_THESPORTSDB_API_KEY to your .env file.");
+    // Return null or an empty object/array to prevent crashes on the calling side.
     return null;
   }
   try {
@@ -40,7 +40,8 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
     }
     return data;
   } catch (error) {
-    throw error; // Re-throw the error to be handled by the caller
+    // Don't log to console, let the caller handle UI.
+    throw error; // Re-throw the error to be handled by the caller's try-catch block.
   }
 }
 
@@ -96,7 +97,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: cleanImageUrl(t.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -130,7 +131,7 @@ export async function getTeam(teamName: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: cleanImageUrl(teamData.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: cleanImageUrl(teamData.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
         description: teamData.strDescriptionEN,
@@ -250,69 +251,93 @@ export async function getTeamFixtures(teamId: string): Promise<Fixture[]> {
 }
 
 export async function getMatch(matchId: string): Promise<Match | undefined> {
-  const data = await fetchFromApi<{events: any[]}>(`lookupevent.php?id=${matchId}`);
-  if (!data || !data.events) return undefined;
-  const matchData = data.events[0];
-  if (!matchData) return undefined;
-
-  const [homeTeam, awayTeam] = await Promise.all([
-    getTeam(matchData.strHomeTeam),
-    getTeam(matchData.strAwayTeam)
+  const eventDataPromise = fetchFromApi<{events: any[]}>(`lookupevent.php?id=${matchId}`);
+  const lineupDataPromise = fetchFromApi<{lineup: any[]}>(`lookuplineup.php?id=${matchId}`);
+  const timelineDataPromise = fetchFromApi<{timeline: any[]}>(`lookuptimeline.php?id=${matchId}`);
+  const statsDataPromise = fetchFromApi<{eventstats: any[]}>(`lookupeventstats.php?id=${matchId}`);
+  
+  const [eventData, lineupData, timelineData, statsData] = await Promise.all([
+      eventDataPromise,
+      lineupDataPromise,
+      timelineDataPromise,
+      statsDataPromise
   ]);
+
+  if (!eventData || !eventData.events) return undefined;
+  const matchData = eventData.events[0];
+  if (!matchData) return undefined;
+  
+  const homeTeam = await getTeam(matchData.strHomeTeam);
+  const awayTeam = await getTeam(matchData.strAwayTeam);
   
   if (!homeTeam || !awayTeam) return undefined;
 
-  // TheSportsDB does not provide detailed events, lineups, or statistics in the free tier.
-  // This data will be mocked or generated.
-  const mockLineupPlayer = (name: string, i: number, teamId: string): LineupPlayer => ({ id: `${teamId}-${i}`, name: `${name} Player ${i}`, pos: 'N/A', grid: null, number: i+1 });
+  // Process Lineups
+  const lineups: Lineup[] = [];
+  if(lineupData && lineupData.lineup) {
+      const processTeamLineup = (teamType: 'Home' | 'Away'): Lineup => {
+          const team = teamType === 'Home' ? homeTeam : awayTeam;
+          const formation = teamType === 'Home' ? matchData.strHomeFormation : matchData.strAwayFormation;
+          const startXI: { player: LineupPlayer }[] = lineupData.lineup
+              .filter(p => p.strTeam === team.name && p.strSide === 'Start')
+              .map(p => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } }));
+          const substitutes: { player: LineupPlayer }[] = lineupData.lineup
+              .filter(p => p.strTeam === team.name && p.strSide === 'Substitutes')
+              .map(p => ({ player: { id: p.idPlayer, name: p.strPlayer, pos: p.strPosition, grid: null, number: p.intSquadNumber } }));
+          
+          return { team: team, formation: formation || null, startXI, substitutes };
+      };
+      lineups.push(processTeamLineup('Home'));
+      lineups.push(processTeamLineup('Away'));
+  }
 
-  
-  const homeLineup: Lineup = {
-      team: homeTeam,
-      formation: matchData.strHomeFormation || "N/A",
-      startXI: Array(11).fill(null).map((_, i) => ({ player: mockLineupPlayer('Home', i, homeTeam.id)})),
-      substitutes: Array(7).fill(null).map((_, i) => ({player: mockLineupPlayer('Sub', i, homeTeam.id)})),
-  };
-    
-  const awayLineup: Lineup = {
-      team: awayTeam,
-      formation: matchData.strAwayFormation || "N/A",
-      startXI: Array(11).fill(null).map((_, i) => ({player: mockLineupPlayer('Away', i, awayTeam.id)})),
-      substitutes: Array(7).fill(null).map((_, i) => ({player: mockLineupPlayer('Sub', i+7, awayTeam.id)})),
-  };
+  // Process Timeline
+  const events: MatchEvent[] = [];
+  if (timelineData && timelineData.timeline) {
+      timelineData.timeline.forEach((event: any) => {
+          let type: MatchEvent['type'] | null = null;
+          if (event.strEvent.includes('Goal')) type = 'Goal';
+          if (event.strEvent.includes('Card')) type = 'Card';
+          if (event.strEvent.includes('Substitution')) type = 'subst';
 
-  const mockEvents: MatchEvent[] = [];
-  if (matchData.strHomeGoalDetails) {
-      matchData.strHomeGoalDetails.split(';').forEach((detail:string) => {
-          const parts = detail.match(/(\d+)'?\s*(.*)/);
-          if (parts) {
-            mockEvents.push({ time: { elapsed: parts[1] }, team: {id: homeTeam.id, name: homeTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
+          if (type) {
+              const team = event.idTeam === homeTeam.id ? homeTeam : awayTeam;
+              events.push({
+                  time: { elapsed: event.intTime },
+                  team: { id: team.id, name: team.name },
+                  player: { id: event.idPlayer, name: event.strPlayer },
+                  type: type,
+                  detail: event.strEvent
+              });
           }
       });
   }
-   if (matchData.strAwayGoalDetails) {
-      matchData.strAwayGoalDetails.split(';').forEach((detail:string) => {
-          const parts = detail.match(/(\d+)'?\s*(.*)/);
-          if (parts) {
-            mockEvents.push({ time: { elapsed: parts[1] }, team: {id: awayTeam.id, name: awayTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
-          }
-      });
-  }
 
+  // Process Stats
   const statistics: MatchStats[] = [];
-  const homeStats: MatchStats['statistics'] = [];
-  const awayStats: MatchStats['statistics'] = [];
+  if (statsData && statsData.eventstats) {
+    const homeStatsRaw = statsData.eventstats.find(s => s.idTeam === homeTeam.id);
+    const awayStatsRaw = statsData.eventstats.find(s => s.idTeam === awayTeam.id);
 
-  if(matchData.intHomeShots) homeStats.push({ type: 'Total Shots', value: matchData.intHomeShots });
-  if(matchData.intAwayShots) awayStats.push({ type: 'Total Shots', value: matchData.intAwayShots });
-  if(matchData.intHomePossession) homeStats.push({ type: 'Ball Possession', value: `${matchData.intHomePossession}%` });
-  if(matchData.intAwayPossession) awayStats.push({ type: 'Ball Possession', value: `${matchData.intAwayPossession}%` });
+    const mapStats = (rawStats: any) => {
+        if (!rawStats) return [];
+        return Object.entries(rawStats)
+            .filter(([key, value]) => key.startsWith('int') && value !== null)
+            .map(([key, value]) => ({
+                // Convert camelCase to Title Case e.g., intShots -> Total Shots
+                type: key.replace('int', '').replace(/([A-Z])/g, ' $1').trim(),
+                value: value
+            }));
+    };
+    
+    if (homeStatsRaw) {
+        statistics.push({ team: { id: homeTeam.id, name: homeTeam.name }, statistics: mapStats(homeStatsRaw) });
+    }
+    if (awayStatsRaw) {
+        statistics.push({ team: { id: awayTeam.id, name: awayTeam.name }, statistics: mapStats(awayStatsRaw) });
+    }
+  }
 
-
-  statistics.push({ team: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo }, statistics: homeStats });
-  statistics.push({ team: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo }, statistics: awayStats });
-
-  
   const fullMatchData: Match = {
     id: matchData.idEvent,
     fixture: {
@@ -323,8 +348,8 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
     league: { name: matchData.strLeague, round: matchData.intRound },
     teams: { home: homeTeam, away: awayTeam },
     goals: { home: matchData.intHomeScore ? parseInt(matchData.intHomeScore) : null, away: matchData.intAwayScore ? parseInt(matchData.intAwayScore) : null },
-    events: mockEvents,
-    lineups: [homeLineup, awayLineup],
+    events: events,
+    lineups: lineups,
     statistics: statistics,
   };
 
@@ -430,3 +455,5 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
     statistics: [], // Full stats can be fetched on the player page
   }));
 }
+
+    
