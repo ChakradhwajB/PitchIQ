@@ -101,6 +101,17 @@ export default async function PlayerPage({ params }: { params: { id: string } })
             </div>
         </Card>
         
+        {player.transfermarket_id && (
+            <Card className="mb-8">
+                <CardContent className="p-4">
+                    <Link href={`https://www.transfermarkt.com/player/profile/player/${player.transfermarket_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-sm font-medium hover:text-primary transition-colors">
+                        View on Transfermarkt
+                        <ExternalLink className="w-4 h-4" />
+                    </Link>
+                </CardContent>
+            </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
                 {player.description && (
@@ -160,16 +171,6 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                         )}
                     </CardContent>
                 </Card>
-                {player.transfermarket_id && (
-                    <Card>
-                        <CardContent className="p-4">
-                            <Link href={`https://www.transfermarkt.com/spieler/profil/spieler/${player.transfermarket_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-sm font-medium hover:text-primary transition-colors">
-                                View on Transfermarkt
-                                <ExternalLink className="w-4 h-4" />
-                            </Link>
-                        </CardContent>
-                    </Card>
-                )}
             </div>
         </div>
     </div>
