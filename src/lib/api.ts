@@ -47,7 +47,6 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
     }
     return data;
   } catch (error) {
-    console.error(`Failed to fetch from ${endpoint}`, error);
     throw error; // Re-throw the error to be handled by the caller
   }
 }
