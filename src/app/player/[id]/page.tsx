@@ -1,13 +1,19 @@
+
+'use client';
+
+import * as React from 'react';
 import { getPlayer, getPlayerHeatmap } from '@/lib/api';
-import type { Player as PlayerType, PlayerStats } from '@/lib/types';
+import type { Player as PlayerType, PlayerStats, HeatmapPoint } from '@/lib/types';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { notFound } from 'next/navigation';
-import { User, Flag, Calendar, BarChart, Zap, Clock, Shield, Target, Award, ArrowRightCircle, Trophy, Shirt, BookOpen, ExternalLink } from 'lucide-react';
+import { User, Flag, Calendar, BarChart, Zap, Clock, Shield, Target, Award, ArrowRightCircle, Trophy, Shirt, BookOpen, ExternalLink, Star, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PlayerHeatmap from '@/components/player-heatmap';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function StatCard({ icon: Icon, title, value }: { icon: React.ElementType, title: string, value: string | number | null }) {
     return (
@@ -47,14 +53,80 @@ function PlayerStatBreakdown({ stats }: { stats: PlayerStats }) {
     )
 }
 
-export default async function PlayerPage({ params }: { params: { id: string } }) {
-  const [player, heatmapPoints] = await Promise.all([
-    getPlayer(params.id),
-    getPlayerHeatmap(params.id),
-  ]);
+function ProFeatureCallout() {
+    return (
+        <Card className="shadow-lg rounded-xl bg-gradient-to-br from-primary/10 to-transparent">
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    Player Heatmap
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+                 <div className="p-4 bg-primary/10 rounded-full inline-block mb-4">
+                    <Lock className="w-8 h-8 text-primary" />
+                </div>
+                <p className="text-muted-foreground mb-4">See where a player has the most impact on the pitch. Upgrade to Pro to unlock this feature.</p>
+                <Button asChild>
+                    <Link href="/pricing">Upgrade to Pro</Link>
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}
+
+function PageSkeleton() {
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <Skeleton className="h-48 w-full mb-8" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
+                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-80 w-full" />
+                    <Skeleton className="h-64 w-full" />
+                </div>
+                <div className="space-y-8">
+                    <Skeleton className="h-72 w-full" />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+
+export default function PlayerPage({ params }: { params: { id: string } }) {
+  const { isProUser } = useAuth();
+  const [player, setPlayer] = React.useState<PlayerType | null>(null);
+  const [heatmapPoints, setHeatmapPoints] = React.useState<HeatmapPoint[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchPlayerData() {
+        setLoading(true);
+        try {
+            const [playerData, heatmapData] = await Promise.all([
+                getPlayer(params.id),
+                getPlayerHeatmap(params.id),
+            ]);
+            setPlayer(playerData || null);
+            setHeatmapPoints(heatmapData);
+        } catch (error) {
+            console.error("Failed to fetch player data:", error);
+            setPlayer(null);
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchPlayerData();
+  }, [params.id]);
+
+
+  if (loading) {
+    return <PageSkeleton />;
+  }
 
   if (!player) {
-    notFound();
+    return <div className="text-center py-12">Player not found.</div>;
   }
 
   const currentTeam = player.statistics?.[0]?.team;
@@ -136,14 +208,18 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-lg rounded-xl">
-                    <CardHeader>
-                        <CardTitle className="font-headline text-2xl">Player Heatmap</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <PlayerHeatmap points={heatmapPoints} />
-                    </CardContent>
-                </Card>
+                { isProUser ? (
+                    <Card className="shadow-lg rounded-xl">
+                        <CardHeader>
+                            <CardTitle className="font-headline text-2xl">Player Heatmap</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <PlayerHeatmap points={heatmapPoints} />
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <ProFeatureCallout />
+                )}
             </div>
             
             <div className="space-y-8">

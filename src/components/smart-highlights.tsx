@@ -1,61 +1,72 @@
-{
-  "name": "nextn",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --turbopack -p 9002",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^4.1.3",
-    "@radix-ui/react-accordion": "^1.2.3",
-    "@radix-ui/react-alert-dialog": "^1.1.6",
-    "@radix-ui/react-avatar": "^1.1.3",
-    "@radix-ui/react-checkbox": "^1.1.4",
-    "@radix-ui/react-collapsible": "^1.1.11",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-dropdown-menu": "^2.1.6",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-menubar": "^1.1.6",
-    "@radix-ui/react-popover": "^1.1.6",
-    "@radix-ui/react-progress": "^1.1.2",
-    "@radix-ui/react-radio-group": "^1.2.3",
-    "@radix-ui/react-scroll-area": "^1.2.3",
-    "@radix-ui/react-select": "^2.1.6",
-    "@radix-ui/react-separator": "^1.1.2",
-    "@radix-ui/react-slider": "^1.2.3",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@radix-ui/react-switch": "^1.1.3",
-    "@radix-ui/react-tabs": "^1.1.3",
-    "@radix-ui/react-toast": "^1.2.6",
-    "@radix-ui/react-tooltip": "^1.1.8",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "date-fns": "^3.6.0",
-    "dotenv": "^16.5.0",
-    "embla-carousel-react": "^8.6.0",
-    "firebase": "^11.9.1",
-    "lucide-react": "^0.475.0",
-    "next": "15.3.3",
-    "patch-package": "^8.0.0",
-    "react": "^18.3.1",
-    "react-day-picker": "^8.10.1",
-    "react-dom": "^18.3.1",
-    "react-hook-form": "^7.54.2",
-    "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+
+'use client';
+
+import * as React from 'react';
+import type { Match } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { Star, Lock, Wand2 } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
+
+interface SmartHighlightsProps {
+  match: Match;
+}
+
+function ProFeatureCallout() {
+    return (
+        <Card className="bg-gradient-to-br from-primary/10 to-transparent">
+            <CardHeader>
+                 <CardTitle className="font-headline text-xl flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    AI Smart Highlights
+                 </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+                <div className="p-4 bg-primary/10 rounded-full inline-block mb-4">
+                    <Lock className="w-8 h-8 text-primary" />
+                </div>
+                <p className="text-muted-foreground mb-4">Get AI-generated summaries and a visual shot map of the match. Upgrade to Pro to unlock this feature.</p>
+                <Button asChild>
+                    <Link href="/pricing">Upgrade to Pro</Link>
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}
+
+
+export default function SmartHighlights({ match }: SmartHighlightsProps) {
+  const { isProUser } = useAuth();
+  const [loading, setLoading] = React.useState(false);
+  
+  if (!isProUser) {
+    return <ProFeatureCallout />;
   }
+
+  return (
+    <Card>
+        <CardHeader>
+            <CardTitle className="font-headline text-xl flex items-center gap-2">
+                <Wand2 className="w-5 h-5 text-primary" />
+                AI Smart Highlights
+            </CardTitle>
+        </CardHeader>
+        <CardContent>
+           <div className="space-y-6">
+                <div>
+                    <h3 className="font-bold mb-2">Match Summary</h3>
+                    <p className="text-sm text-muted-foreground">AI-generated match summaries are coming soon for Pro users!</p>
+                </div>
+                 <div>
+                    <h3 className="font-bold mb-2">Shot Map</h3>
+                    <div className="relative aspect-[105/68] w-full bg-green-600/10 rounded-lg flex items-center justify-center border-2 border-dashed border-muted">
+                        <p className="text-center text-muted-foreground m-auto text-sm p-4">AI-powered shot maps are coming soon for Pro users!</p>
+                    </div>
+                </div>
+           </div>
+        </CardContent>
+    </Card>
+  );
 }

@@ -1,14 +1,20 @@
 
+'use client';
+
+import * as React from 'react';
 import { getMatch } from '@/lib/api';
 import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer } from '@/lib/types';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { notFound } from 'next/navigation';
-import { Clock, Goal, Replace, Square, Users, Trophy, Shirt, Tv } from 'lucide-react';
+import { Clock, Goal, Replace, Square, Users, Trophy, Shirt, Tv, Star, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import SmartHighlights from '@/components/smart-highlights';
 
 function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: number | null }) {
     return (
@@ -101,6 +107,28 @@ function StatsTable({ stats, homeTeamId, awayTeamId }: { stats: MatchStats[], ho
     )
 }
 
+function ProFeatureCallout({ title, description }: { title: string, description: string }) {
+    return (
+        <Card className="bg-gradient-to-br from-primary/10 to-transparent">
+            <CardHeader>
+                 <CardTitle className="font-headline text-xl flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    {title}
+                 </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+                <div className="p-4 bg-primary/10 rounded-full inline-block mb-4">
+                    <Lock className="w-8 h-8 text-primary" />
+                </div>
+                <p className="text-muted-foreground mb-4">{description}</p>
+                <Button asChild>
+                    <Link href="/pricing">Upgrade to Pro</Link>
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}
+
 function EventIcon({ event }: {event: MatchEvent}) {
     switch(event.type) {
         case 'Goal': return <Goal className="w-5 h-5 text-green-500"/>
@@ -178,11 +206,55 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
     )
 }
 
-export default async function MatchPage({ params }: { params: { id: string } }) {
-  const match = await getMatch(params.id);
+function PageSkeleton() {
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <Card className="mb-8 shadow-lg rounded-xl"><CardContent className="p-8"><Skeleton className="h-24 w-full" /></CardContent></Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
+                    <Skeleton className="h-64 w-full" />
+                    <Skeleton className="h-48 w-full" />
+                    <Skeleton className="h-96 w-full" />
+                </div>
+                <div className="space-y-8">
+                    <Skeleton className="h-72 w-full" />
+                    <Skeleton className="h-48 w-full" />
+                </div>
+            </div>
+        </div>
+    )
+}
 
-  if (!match) {
-    notFound();
+export default function MatchPage({ params }: { params: { id: string } }) {
+  const { isProUser } = useAuth();
+  const [match, setMatch] = React.useState<MatchType | undefined>(undefined);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(false);
+
+  React.useEffect(() => {
+    async function fetchMatch() {
+        try {
+            const matchData = await getMatch(params.id);
+            if(matchData) {
+                setMatch(matchData);
+            } else {
+                setError(true);
+            }
+        } catch (err) {
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchMatch();
+  }, [params.id]);
+
+  if (loading) {
+      return <PageSkeleton />;
+  }
+
+  if (error || !match) {
+    return <div className="text-center py-12">Match not found.</div>;
   }
   
   const homeLineup = match.lineups.find(l => l.team.id === match.teams.home.id);
@@ -252,7 +324,14 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
             </div>
             <div className="space-y-8">
                 {/* Match Stats */}
-                <StatsTable stats={match.statistics} homeTeamId={match.teams.home.id} awayTeamId={match.teams.away.id} />
+                { isProUser ? (
+                    <StatsTable stats={match.statistics} homeTeamId={match.teams.home.id} awayTeamId={match.teams.away.id} />
+                ) : (
+                    <ProFeatureCallout title="In-depth Match Stats" description="Get a detailed breakdown of match statistics, including possession, shots, and more." />
+                )}
+
+                <SmartHighlights match={match} />
+
 
                 {/* Where to Watch */}
                 {match.tvEvents && match.tvEvents.length > 0 && (

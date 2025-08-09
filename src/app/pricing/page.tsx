@@ -1,9 +1,15 @@
 
+'use client';
+
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check } from 'lucide-react';
+import { Check, Star } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { toast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const tiers = [
   {
@@ -40,6 +46,23 @@ const tiers = [
 ];
 
 export default function PricingPage() {
+  const { user, isProUser, setProTierActivated } = useAuth();
+  const router = useRouter();
+
+  const handleUpgrade = () => {
+    if (!user) {
+        router.push('/login?redirect=/pricing');
+        return;
+    }
+    // In a real app, this would trigger a payment flow with Stripe, etc.
+    // For now, we just simulate the upgrade.
+    setProTierActivated(true);
+    toast({
+        title: 'Upgrade Successful!',
+        description: "You've unlocked all Pro features. Enjoy!",
+    });
+  }
+
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="text-center mb-12">
@@ -62,7 +85,8 @@ export default function PricingPage() {
           >
             {tier.primary && (
                 <div className="absolute top-0 -translate-y-1/2 w-full flex justify-center">
-                    <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                    <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                        <Star className="w-4 h-4" />
                         Most Popular
                     </div>
                 </div>
@@ -86,14 +110,15 @@ export default function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter>
-              <Button
-                asChild
-                className="w-full"
-                variant={tier.primary ? 'default' : 'outline'}
-                disabled={tier.ctaLink === '#'}
-              >
-                <Link href={tier.ctaLink}>{tier.cta}</Link>
-              </Button>
+              {tier.name === 'Pro' ? (
+                <Button className="w-full" onClick={handleUpgrade} disabled={isProUser}>
+                    {isProUser ? 'You are a Pro' : tier.cta}
+                </Button>
+              ) : (
+                <Button asChild className="w-full" variant="outline" disabled={!!user}>
+                    <Link href={tier.ctaLink}>{!!user ? 'You are on the Free Plan' : tier.cta}</Link>
+                </Button>
+              )}
             </CardFooter>
           </Card>
         ))}
