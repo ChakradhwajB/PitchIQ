@@ -285,7 +285,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
               player: { 
                   id: p.idPlayer, 
                   name: p.strPlayer, 
-                  pos: p.strPosition, 
+                  pos: p.strPosition,
                   grid: null, // TheSportsDB doesn't provide grid
                   number: p.intSquadNumber 
               } 
@@ -309,9 +309,11 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   if (timelineData && timelineData.timeline) {
       timelineData.timeline.forEach((event: any) => {
           let type: MatchEvent['type'] | null = null;
-          if (event.strEvent.includes('Goal')) type = 'Goal';
-          if (event.strEvent.includes('Card')) type = 'Card';
-          if (event.strEvent.includes('Substitution')) type = 'subst';
+          const eventTypeStr = event.strTimeline;
+
+          if (eventTypeStr.includes('Goal')) type = 'Goal';
+          else if (eventTypeStr.includes('Card')) type = 'Card';
+          else if (eventTypeStr.includes('subst')) type = 'subst';
 
           if (type) {
               const team = event.idTeam === homeTeam.id ? homeTeam : awayTeam;
@@ -320,7 +322,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
                   team: { id: team.id, name: team.name, logo: team.logo },
                   player: { id: event.idPlayer, name: event.strPlayer },
                   type: type,
-                  detail: event.strEvent
+                  detail: event.strTimelineDetail
               });
           }
       });
