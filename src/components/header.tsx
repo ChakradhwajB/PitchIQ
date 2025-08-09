@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export function Header() {
   const navLinks = [
-    { href: '/', label: 'Standings', disabled: false },
+    { href: '/standings', label: 'Standings', disabled: false },
     { href: '/matches', label: 'Matches', disabled: false },
     { href: '/players', label: 'Players', disabled: false },
     { href: '/news', label: 'News', disabled: false },
