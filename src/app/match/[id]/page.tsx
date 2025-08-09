@@ -119,6 +119,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-border"></div>
             {sortedEvents.map((event, i) => {
                 const isHomeEvent = event.team.id === homeTeamId;
+                const detailText = event.detail === 'Normal Goal' ? 'Goal' : event.detail;
                 return (
                     <div key={i} className="relative flex items-center mb-8">
                         {isHomeEvent ? (
@@ -131,7 +132,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
                                             </Link>
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
-                                        <p className="text-xs text-muted-foreground">{event.detail}</p>
+                                        <p className="text-xs text-muted-foreground">{detailText}</p>
                                     </div>
                                 </div>
                                 <div className="absolute left-1/2 -translate-x-1/2 bg-background border-2 border-primary rounded-full p-1 z-10">
@@ -157,7 +158,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
                                             </Link>
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
-                                        <p className="text-xs text-muted-foreground">{event.detail}</p>
+                                        <p className="text-xs text-muted-foreground">{detailText}</p>
                                     </div>
                                 </div>
                             </>
