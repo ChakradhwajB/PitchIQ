@@ -104,7 +104,8 @@ Deploying your PitchIQ app to Netlify is a straightforward process.
     - Connect to GitHub and select your project's repository.
 
 3.  **Configure Build Settings:**
-    Netlify should automatically detect that you're using Next.js and configure the settings for you. They should look like this:
+    Netlify should automatically detect that you're using Next.js. If you need to enter the settings manually, use the following:
+    - **Base directory:** Leave this field **blank**.
     - **Build command:** `next build`
     - **Publish directory:** `.next`
 
