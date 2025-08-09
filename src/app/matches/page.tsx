@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -20,14 +21,22 @@ function formatDateForApi(date: Date) {
 export default function MatchesPage() {
   const [fixtures, setFixtures] = React.useState<Fixture[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(undefined);
+
+  React.useEffect(() => {
+    // Set the initial date on the client to avoid hydration mismatch
+    if (selectedDate === undefined) {
+      setSelectedDate(new Date());
+    }
+  }, [selectedDate]);
 
   React.useEffect(() => {
     async function fetchData() {
+      if (!selectedDate) return;
       setLoading(true);
       const dateStr = formatDateForApi(selectedDate);
       const fixturesData = await getFixturesByDate(dateStr);
-      setFixtures(fixturesData);
+      setFixtures(fixturesData || []);
       setLoading(false);
     }
     fetchData();
@@ -66,11 +75,11 @@ export default function MatchesPage() {
       <Card className="shadow-lg rounded-xl">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">
-            Fixtures for {format(selectedDate, "PPP")}
+            {selectedDate ? `Fixtures for ${format(selectedDate, "PPP")}` : 'Select a date'}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {loading || !selectedDate ? (
             <div className="space-y-4">
               <Skeleton className="h-20 w-full" />
               <Skeleton className="h-20 w-full" />
