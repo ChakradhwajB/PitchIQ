@@ -1,3 +1,4 @@
+
 import { getMatch } from '@/lib/api';
 import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer } from '@/lib/types';
 import Image from 'next/image';

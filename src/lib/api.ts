@@ -278,9 +278,8 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   // Process Lineups
   const lineups: Lineup[] = [];
   if(lineupData && lineupData.lineup) {
-      const processTeamLineup = (teamType: 'Home' | 'Away'): Lineup => {
-          const team = teamType === 'Home' ? homeTeam : awayTeam;
-          const formation = teamType === 'Home' ? matchData.strHomeFormation : matchData.strAwayFormation;
+      const processTeamLineup = (teamId: string, teamName: string, teamLogo: string, formation: string | null): Lineup => {
+          const team = {id: teamId, name: teamName, logo: teamLogo};
           const mapPlayer = (p: any): { player: LineupPlayer } => ({ 
               player: { 
                   id: p.idPlayer, 
@@ -292,16 +291,16 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
           });
           
           const startXI: { player: LineupPlayer }[] = lineupData.lineup
-              .filter(p => p.idTeam === team.id && p.strSubstitute === 'No')
+              .filter(p => p.idTeam === teamId && p.strSubstitute === 'No')
               .map(mapPlayer);
           const substitutes: { player: LineupPlayer }[] = lineupData.lineup
-              .filter(p => p.idTeam === team.id && p.strSubstitute === 'Yes')
+              .filter(p => p.idTeam === teamId && p.strSubstitute === 'Yes')
               .map(mapPlayer);
           
           return { team: team, formation: formation || null, startXI, substitutes };
       };
-      lineups.push(processTeamLineup('Home'));
-      lineups.push(processTeamLineup('Away'));
+      lineups.push(processTeamLineup(homeTeam.id, homeTeam.name, homeTeam.logo, matchData.strHomeFormation));
+      lineups.push(processTeamLineup(awayTeam.id, awayTeam.name, awayTeam.logo, matchData.strAwayFormation));
   }
 
   // Process Timeline
@@ -329,29 +328,26 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   }
 
   // Process Stats
-  const statistics: MatchStats[] = [];
-  if (statsData && statsData.eventstats) {
-    const homeStatsRaw = statsData.eventstats.find(s => s.idTeam === homeTeam.id);
-    const awayStatsRaw = statsData.eventstats.find(s => s.idTeam === awayTeam.id);
-
-    const mapStats = (rawStats: any) => {
-        if (!rawStats) return [];
-        return Object.entries(rawStats)
-            .filter(([key, value]) => key.startsWith('int') && value !== null)
-            .map(([key, value]) => ({
-                // Convert camelCase to Title Case e.g., intShots -> Total Shots
-                type: key.replace('int', '').replace(/([A-Z])/g, ' $1').trim(),
-                value: value
-            }));
-    };
-    
-    if (homeStatsRaw) {
-        statistics.push({ team: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo }, statistics: mapStats(homeStatsRaw) });
+    const statistics: MatchStats[] = [];
+    if (statsData && statsData.eventstats) {
+        const homeStatsList = statsData.eventstats.map(stat => ({
+            type: stat.strStat,
+            value: stat.intHome ?? '0'
+        }));
+        const awayStatsList = statsData.eventstats.map(stat => ({
+            type: stat.strStat,
+            value: stat.intAway ?? '0'
+        }));
+        
+        statistics.push({
+            team: homeTeam,
+            statistics: homeStatsList
+        });
+        statistics.push({
+            team: awayTeam,
+            statistics: awayStatsList
+        });
     }
-    if (awayStatsRaw) {
-        statistics.push({ team: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo }, statistics: mapStats(awayStatsRaw) });
-    }
-  }
 
   const fullMatchData: Match = {
     id: matchData.idEvent,
