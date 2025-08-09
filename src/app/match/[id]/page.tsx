@@ -3,11 +3,10 @@ import type { Match as MatchType, Lineup, MatchStats, MatchEvent, LineupPlayer }
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { notFound } from 'next/navigation';
-import { Clock, Goal, Replace, Square, Users, Trophy } from 'lucide-react';
+import { Clock, Goal, Replace, Square, Users, Trophy, Shirt } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import LineupDiagram from '@/components/lineup-diagram';
 
 function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: number | null }) {
     return (
@@ -17,6 +16,26 @@ function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: 
             <p className="text-5xl font-bold text-primary">{goals ?? '-'}</p>
         </div>
     )
+}
+
+function StartingLineup({ lineup }: { lineup: Lineup }) {
+    return (
+        <div>
+            <h3 className="font-bold text-lg mb-2 text-center font-headline">{lineup.team.name}</h3>
+            <p className="text-sm text-muted-foreground text-center mb-4">{lineup.formation}</p>
+            <ul className="space-y-3">
+                {lineup.startXI.map(({ player }) => (
+                    <li key={player.id} className="flex items-center gap-3 text-sm">
+                        <Badge variant="outline" className="w-8 h-8 flex items-center justify-center text-xs">{player.number}</Badge>
+                         <Link href={`/player/${player.id}`} className="font-medium hover:text-primary transition-colors hover:underline">
+                            {player.name}
+                        </Link>
+                        <span className="text-muted-foreground ml-auto">{player.pos}</span>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
 }
 
 function SubstitutesList({ lineup }: { lineup?: Lineup }) {
@@ -182,14 +201,19 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
             <div className="lg:col-span-2 space-y-8">
                  {/* Lineups */}
                  <Card>
-                    <CardHeader><CardTitle className="font-headline text-xl">Lineups</CardTitle></CardHeader>
-                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    <CardHeader>
+                        <CardTitle className="font-headline text-xl flex items-center gap-2">
+                            <Shirt className="w-5 h-5" />
+                            Starting Lineups
+                        </CardTitle>
+                    </CardHeader>
+                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 divide-y md:divide-y-0 md:divide-x">
                         {homeLineup && homeLineup.startXI.length > 0 ? (
-                           <LineupDiagram lineup={homeLineup} />
-                        ) : <p className="text-muted-foreground">Home lineup not available.</p>}
+                           <div className="p-4"><StartingLineup lineup={homeLineup} /></div>
+                        ) : <p className="text-muted-foreground p-4">Home lineup not available.</p>}
                         {awayLineup && awayLineup.startXI.length > 0 ? (
-                            <LineupDiagram lineup={awayLineup} />
-                        ) : <p className="text-muted-foreground">Away lineup not available.</p>}
+                            <div className="p-4"><StartingLineup lineup={awayLineup} /></div>
+                        ) : <p className="text-muted-foreground p-4">Away lineup not available.</p>}
                     </CardContent>
                 </Card>
 
