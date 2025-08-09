@@ -59,9 +59,52 @@ const TOP_LEAGUE_IDS: {[key: string]: string} = {
 const REVERSE_LEAGUE_IDS = Object.fromEntries(Object.entries(TOP_LEAGUE_IDS).map(([k, v]) => [v, k]));
 
 export async function getLeagues(): Promise<League[]> {
-    return Object.entries(TOP_LEAGUE_IDS).map(([name, id]) => ({
-        id,
-        name,
+    const data = await fetchFromApi<{leagues: any[]}>('all_leagues.php');
+    if (!data || !data.leagues) return [];
+
+    // Filter to only include the top leagues we want to show
+    const topLeagues = data.leagues
+        .filter(l => Object.values(TOP_LEAGUE_IDS).includes(l.idLeague))
+        .map(l => ({
+            id: l.idLeague,
+            name: l.strLeague,
+            logo: cleanImageUrl(l.strBadge) || undefined,
+            country: l.strCountry
+        }));
+    
+    // Ensure the order is the same as TOP_LEAGUE_IDS
+    return Object.values(TOP_LEAGUE_IDS)
+        .map(id => topLeagues.find(l => l.id === id))
+        .filter((l): l is League => l !== undefined);
+}
+
+export async function getLeagueDetails(leagueId: string): Promise<League | null> {
+    const data = await fetchFromApi<{ leagues: any[] }>(`lookupleague.php?id=${leagueId}`);
+    if (!data || !data.leagues || data.leagues.length === 0) {
+        return null;
+    }
+    const leagueData = data.leagues[0];
+    return {
+        id: leagueData.idLeague,
+        name: leagueData.strLeague,
+        logo: cleanImageUrl(leagueData.strBadge),
+        country: leagueData.strCountry,
+        description: leagueData.strDescriptionEN,
+        banner: cleanImageUrl(leagueData.strBanner),
+        trophy: cleanImageUrl(leagueData.strTrophy),
+    };
+}
+
+
+export async function getTeamsInLeague(leagueId: string): Promise<Team[]> {
+    const currentSeason = "2023-2024"; // The API for all teams in a league is paid, so we get it from standings.
+    const data = await fetchFromApi<{ table: any[] }>(`lookuptable.php?l=${leagueId}&s=${currentSeason}`);
+    if (!data || !data.table) return [];
+    
+    return data.table.map(t => ({
+        id: t.idTeam,
+        name: t.strTeam,
+        logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
     }));
 }
 
@@ -96,7 +139,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: cleanImageUrl(t.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -514,5 +557,3 @@ export async function getNews(leagueKey: string = 'all'): Promise<NewsArticle[]>
         return [];
     }
 }
-
-    

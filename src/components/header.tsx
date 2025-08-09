@@ -33,6 +33,7 @@ const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export function Header() {
   const navLinks = [
     { href: '/standings', label: 'Standings', disabled: false },
+    { href: '/leagues', label: 'Leagues', disabled: false },
     { href: '/matches', label: 'Matches', disabled: false },
     { href: '/players', label: 'Players', disabled: false },
     { href: '/news', label: 'News', disabled: false },
