@@ -87,7 +87,7 @@ export async function getLeagueDetails(leagueId: string): Promise<League | null>
     return {
         id: leagueData.idLeague,
         name: leagueData.strLeague,
-        logo: cleanImageUrl(leagueData.strBadge),
+        logo: cleanImageUrl(leagueData.strLogo),
         country: leagueData.strCountry,
         description: leagueData.strDescriptionEN,
         banner: cleanImageUrl(leagueData.strBanner),

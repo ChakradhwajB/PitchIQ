@@ -65,12 +65,6 @@ export function Header() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-            Log In
-          </Button>
-          <Button size="sm" className="hidden md:inline-flex">
-            Sign Up
-          </Button>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
@@ -79,7 +73,7 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
-              <div className="flex flex-col gap-6 p-6">
+              <div className="flex h-full flex-col gap-6 p-6">
                 <Link href="/" className="flex items-center gap-2">
                     <LogoIcon className="h-7 w-7 text-primary" />
                     <span className="text-xl font-bold font-headline text-foreground">
@@ -102,10 +96,6 @@ export function Header() {
                     </Link>
                   ))}
                 </nav>
-                <div className="mt-auto flex flex-col gap-2">
-                    <Button>Sign Up</Button>
-                    <Button variant="outline">Log In</Button>
-                </div>
               </div>
             </SheetContent>
           </Sheet>
