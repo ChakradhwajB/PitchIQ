@@ -104,7 +104,7 @@ export default async function PlayerPage({ params }: { params: { id: string } })
         {player.transfermarket_id && (
             <Card className="mb-8">
                 <CardContent className="p-4">
-                    <Link href={`https://www.transfermarkt.com/player/profile/player/${player.transfermarket_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-sm font-medium hover:text-primary transition-colors">
+                    <Link href={`https://www.transfermarkt.com/spieler/profil/spieler/${player.transfermarket_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-sm font-medium hover:text-primary transition-colors">
                         View on Transfermarkt
                         <ExternalLink className="w-4 h-4" />
                     </Link>
