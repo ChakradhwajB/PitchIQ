@@ -1,8 +1,33 @@
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, Footprints } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="28" 
+        height="28" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="1.5"
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        {...props}
+    >
+        <path d="M4 2v2" />
+        <path d="M20 2v2" />
+        <path d="M12 2v2" />
+        <path d="M4 11v-1a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v1" />
+        <path d="M4 14v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-1" />
+        <circle cx="12" cy="13" r="3" />
+        <path d="M8 20.15c.67-1.11 1.76-2.02 3-2.65" />
+        <path d="M16 20.15c-.67-1.11-1.76-2.02-3-2.65" />
+    </svg>
+);
+
 
 export function Header() {
   const navLinks = [
@@ -16,7 +41,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <Footprints className="h-7 w-7 text-primary" />
+          <LogoIcon className="h-7 w-7 text-primary" />
           <span className="text-xl font-bold font-headline text-foreground">
             PitchIQ
           </span>
@@ -54,7 +79,7 @@ export function Header() {
             <SheetContent side="right">
               <div className="flex flex-col gap-6 p-6">
                 <Link href="/" className="flex items-center gap-2">
-                    <Footprints className="h-7 w-7 text-primary" />
+                    <LogoIcon className="h-7 w-7 text-primary" />
                     <span className="text-xl font-bold font-headline text-foreground">
                         PitchIQ
                     </span>

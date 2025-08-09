@@ -9,12 +9,12 @@ export function Footer() {
           <p>
             Football data provided by{' '}
             <a
-              href="https://www.api-football.com/"
+              href="https://www.thesportsdb.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
-              API-Football
+              TheSportsDB
             </a>
             .
           </p>
