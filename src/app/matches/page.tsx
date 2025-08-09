@@ -42,7 +42,6 @@ export default function MatchesPage() {
         const fixturesData = await getFixturesByDate(dateStr);
         setFixtures(fixturesData || []);
       } catch (e) {
-        console.error(e);
         setError('Could not fetch match data. Please try again later.');
         setFixtures([]);
       } finally {
