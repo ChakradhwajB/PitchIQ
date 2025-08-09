@@ -4,9 +4,10 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { notFound } from 'next/navigation';
-import { User, Flag, Calendar, BarChart, Zap, Clock, Shield, Target, Award, ArrowRightCircle, Trophy } from 'lucide-react';
+import { User, Flag, Calendar, BarChart, Zap, Clock, Shield, Target, Award, ArrowRightCircle, Trophy, Shirt, BookOpen, ExternalLink } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import PlayerHeatmap from '@/components/player-heatmap';
+import Link from 'next/link';
 
 function StatCard({ icon: Icon, title, value }: { icon: React.ElementType, title: string, value: string | number | null }) {
     return (
@@ -81,6 +82,11 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                         data-ai-hint="team logo"
                     />
                     )}
+                    {player.number && (
+                        <div className="absolute top-0 right-0 flex items-center justify-center w-10 h-10 bg-background rounded-full font-bold text-lg text-primary border-2 border-primary">
+                            {player.number}
+                        </div>
+                    )}
                 </div>
                 <div className="text-center md:text-left text-primary-foreground">
                     <h1 className="text-4xl font-headline font-bold">{player.name}</h1>
@@ -97,6 +103,15 @@ export default async function PlayerPage({ params }: { params: { id: string } })
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
+                {player.description && (
+                    <Card className="shadow-lg rounded-xl">
+                        <CardHeader><CardTitle className="font-headline text-2xl flex items-center gap-2"><BookOpen /> Biography</CardTitle></CardHeader>
+                        <CardContent className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                            <p>{player.description}</p>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <Card className="shadow-lg rounded-xl">
                     <CardHeader>
                         <CardTitle className="font-headline text-2xl">Performance Metrics</CardTitle>
@@ -145,6 +160,16 @@ export default async function PlayerPage({ params }: { params: { id: string } })
                         )}
                     </CardContent>
                 </Card>
+                {player.transfermarket_id && (
+                    <Card>
+                        <CardContent className="p-4">
+                            <Link href={`https://www.transfermarkt.com/spieler/profil/spieler/${player.transfermarket_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between text-sm font-medium hover:text-primary transition-colors">
+                                View on Transfermarkt
+                                <ExternalLink className="w-4 h-4" />
+                            </Link>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </div>
     </div>

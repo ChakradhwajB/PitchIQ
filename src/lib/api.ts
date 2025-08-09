@@ -12,11 +12,8 @@ const PLACEHOLDER_TEAM_IMAGE_URL = 'https://www.thesportsdb.com/images/shared/pl
 function cleanImageUrl(url: string | null | undefined): string {
     if (!url || typeof url !== 'string') return '';
     // The API sometimes returns URLs with /preview appended, which is not a direct image link.
-    if (url.endsWith('/preview')) {
-        return url.slice(0, -8); 
-    }
-    // If the url is valid and doesn't have /preview, just return it.
-    return url;
+    const cleanedUrl = url.endsWith('/preview') ? url.slice(0, -8) : url;
+    return cleanedUrl || '';
 }
 
 
@@ -28,11 +25,6 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
   }
   try {
     const response = await fetch(`${API_BASE_URL}/${API_KEY}/${endpoint}`);
-    //if (!response.ok) {
-      //console.error(`API Error: ${response.status} ${response.statusText}`);
-      // Don't return null immediately, let it proceed to the catch block if parsing fails.
-   // }
-    
     // Check for empty response body before parsing JSON
     const text = await response.text();
     if (!text) {
@@ -42,8 +34,9 @@ async function fetchFromApi<T>(endpoint: string): Promise<T | null> {
     const data = JSON.parse(text);
 
     // TheSportsDB doesn't have a consistent error format, so we check for empty results.
-    if (!data || (data.teams === null) || (data.leagues === null) || (data.events === null) || (data.table === null) || (data.player === null)) {
-        // console.warn(`No data found for endpoint: ${endpoint}`);
+    const resultKey = Object.keys(data)[0];
+    if (!data || data[resultKey] === null) {
+      // No data found for this endpoint.
     }
     return data;
   } catch (error) {
@@ -103,7 +96,7 @@ export async function getStandings(leagueId: string, season: string): Promise<St
       team: {
           id: t.idTeam,
           name: t.strTeam,
-          logo: cleanImageUrl(t.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+          logo: cleanImageUrl(t.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
       },
       points: t.intPoints,
       goalsDiff: t.intGoalDifference,
@@ -137,7 +130,7 @@ export async function getTeam(teamName: string): Promise<Team | undefined> {
     return {
         id: teamData.idTeam,
         name: teamData.strTeam,
-        logo: cleanImageUrl(teamData.strBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
+        logo: cleanImageUrl(teamData.strTeamBadge) || PLACEHOLDER_TEAM_IMAGE_URL,
         country: teamData.strCountry,
         stadium: teamData.strStadium,
         description: teamData.strDescriptionEN,
@@ -151,6 +144,7 @@ export async function getTeamPlayers(teamId: string): Promise<Player[]> {
     return data.player.map((p: any) => ({
       id: p.idPlayer,
       name: p.strPlayer,
+      number: p.strNumber,
       age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
       nationality: p.strNationality,
       height: p.strHeight,
@@ -199,6 +193,7 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
     return {
         id: p.idPlayer,
         name: p.strPlayer,
+        number: p.strNumber || null,
         age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
         nationality: p.strNationality,
         height: p.strHeight,
@@ -207,6 +202,8 @@ export async function getPlayer(playerId: string): Promise<Player | undefined> {
         position: p.strPosition,
         statistics: statistics,
         career: career,
+        description: p.strDescriptionEN || null,
+        transfermarket_id: p.idTransferMkt || null,
     };
 }
 
@@ -287,7 +284,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   const mockEvents: MatchEvent[] = [];
   if (matchData.strHomeGoalDetails) {
       matchData.strHomeGoalDetails.split(';').forEach((detail:string) => {
-          const parts = detail.match(/(\\d+)'?\\s*(.*)/);
+          const parts = detail.match(/(\d+)'?\s*(.*)/);
           if (parts) {
             mockEvents.push({ time: { elapsed: parts[1] }, team: {id: homeTeam.id, name: homeTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
           }
@@ -295,7 +292,7 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   }
    if (matchData.strAwayGoalDetails) {
       matchData.strAwayGoalDetails.split(';').forEach((detail:string) => {
-          const parts = detail.match(/(\\d+)'?\\s*(.*)/);
+          const parts = detail.match(/(\d+)'?\s*(.*)/);
           if (parts) {
             mockEvents.push({ time: { elapsed: parts[1] }, team: {id: awayTeam.id, name: awayTeam.name}, player: {id: '0', name: parts[2].trim()}, type: 'Goal', detail: 'Normal Goal'})
           }
@@ -312,8 +309,8 @@ export async function getMatch(matchId: string): Promise<Match | undefined> {
   if(matchData.intAwayPossession) awayStats.push({ type: 'Ball Possession', value: `${matchData.intAwayPossession}%` });
 
 
-  statistics.push({ team: { id: homeTeam.id, name: homeTeam.name }, statistics: homeStats });
-  statistics.push({ team: { id: awayTeam.id, name: awayTeam.name }, statistics: awayStats });
+  statistics.push({ team: { id: homeTeam.id, name: homeTeam.name, logo: homeTeam.logo }, statistics: homeStats });
+  statistics.push({ team: { id: awayTeam.id, name: awayTeam.name, logo: awayTeam.logo }, statistics: awayStats });
 
   
   const fullMatchData: Match = {
@@ -364,7 +361,7 @@ export async function getPlayerHeatmap(playerId: string): Promise<HeatmapPoint[]
 export async function getFixturesByStage(leagueId: string, season: string, round: string): Promise<Fixture[]> {
     // TheSportsDB API doesn't support fetching by stage/round name in the same way.
     // We will fetch all matches for the season and filter if possible.
-    const roundNumber = round.match(/\\d+/)?.[0];
+    const roundNumber = round.match(/\d+/)?.[0];
     if (!roundNumber) return [];
 
     const data = await fetchFromApi<{events: any[]}>(`eventsround.php?id=${leagueId}&r=${roundNumber}&s=${season}`);
@@ -421,10 +418,11 @@ export async function searchPlayersByName(name: string): Promise<Player[]> {
   if (!data || !data.player) return [];
 
   return data.player
-    .filter(p => p.strSport === 'Soccer') // Filter only for soccer players
+    .filter((p:any) => p.strSport === 'Soccer') // Filter only for soccer players
     .map((p: any) => ({
     id: p.idPlayer,
     name: p.strPlayer,
+    number: p.strNumber || null,
     age: p.dateBorn ? new Date().getFullYear() - new Date(p.dateBorn).getFullYear() : 0,
     nationality: p.strNationality,
     photo: cleanImageUrl(p.strCutout) || cleanImageUrl(p.strThumb) || PLACEHOLDER_IMAGE_URL,

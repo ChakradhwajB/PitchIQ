@@ -40,6 +40,7 @@ export interface Player {
   id: string;
   name: string;
   age: number;
+  number: string | null;
   nationality: string;
   height: string;
   weight: string;
@@ -47,6 +48,8 @@ export interface Player {
   statistics: PlayerStats[];
   position?: string;
   career?: { team: { name: string, logo: string }, start: string, end: string | null }[]
+  description?: string | null;
+  transfermarket_id?: string | null;
 }
 
 export interface PlayerStats {
@@ -117,6 +120,7 @@ export interface LineupPlayer {
   name: string;
   pos: string;
   grid: string | null;
+  number?: number;
 }
 
 export interface Lineup {
