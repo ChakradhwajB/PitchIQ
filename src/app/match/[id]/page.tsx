@@ -7,6 +7,7 @@ import { Clock, Goal, Replace, Square, Users, Trophy, Shirt } from 'lucide-react
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 function TeamHeader({ team, goals }: { team: MatchType['teams']['home'], goals: number | null }) {
     return (
@@ -120,8 +121,10 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
             {sortedEvents.map((event, i) => {
                 const isHomeEvent = event.team.id === homeTeamId;
                 let detailText = event.detail;
+                let isGoal = false;
                 if (event.type === 'Goal') {
                     detailText = 'GOAL!!!!!!';
+                    isGoal = true;
                 }
                 
                 return (
@@ -136,7 +139,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
                                             </Link>
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
-                                        <p className="text-xs text-muted-foreground">{detailText}</p>
+                                        <p className={cn("text-xs text-muted-foreground", isGoal && "font-bold text-primary")}>{detailText}</p>
                                     </div>
                                 </div>
                                 <div className="absolute left-1/2 -translate-x-1/2 bg-background border-2 border-primary rounded-full p-1 z-10">
@@ -162,7 +165,7 @@ function Timeline({ events, homeTeamId }: { events: MatchEvent[], homeTeamId: st
                                             </Link>
                                         </p>
                                         <p className="text-xs font-bold text-muted-foreground">{event.team.name}</p>
-                                        <p className="text-xs text-muted-foreground">{detailText}</p>
+                                        <p className={cn("text-xs text-muted-foreground", isGoal && "font-bold text-primary")}>{detailText}</p>
                                     </div>
                                 </div>
                             </>
