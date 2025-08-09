@@ -51,6 +51,7 @@ export function Header() {
     { href: '/matches', label: 'Matches', disabled: false },
     { href: '/players', label: 'Players', disabled: false },
     { href: '/news', label: 'News', disabled: false },
+    { href: '/pricing', label: 'Pricing', disabled: false },
   ];
 
   return (
@@ -98,7 +99,7 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
-                <SheetHeader className="p-6">
+                <SheetHeader>
                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                 </SheetHeader>
               <div className="flex h-full flex-col gap-6 p-6 pt-0">
