@@ -1,9 +1,15 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg 
@@ -31,6 +37,14 @@ const LogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export function Header() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
   const navLinks = [
     { href: '/standings', label: 'Standings', disabled: false },
     { href: '/leagues', label: 'Leagues', disabled: false },
@@ -65,6 +79,17 @@ export function Header() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+           {user ? (
+            <div className="hidden md:flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={handleLogout}>Log Out <LogOut className="ml-2 h-4 w-4"/></Button>
+            </div>
+          ) : (
+             <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" asChild size="sm"><Link href="/login">Log In</Link></Button>
+                <Button asChild size="sm"><Link href="/signup">Sign Up</Link></Button>
+             </div>
+          )}
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
@@ -99,6 +124,16 @@ export function Header() {
                     </Link>
                   ))}
                 </nav>
+                <div className="mt-auto flex flex-col gap-2">
+                  {user ? (
+                     <Button variant="outline" onClick={handleLogout}>Log Out <LogOut className="ml-2 h-4 w-4"/></Button>
+                  ) : (
+                    <>
+                      <Button variant="outline" asChild><Link href="/login">Log In</Link></Button>
+                      <Button asChild><Link href="/signup">Sign Up</Link></Button>
+                    </>
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
