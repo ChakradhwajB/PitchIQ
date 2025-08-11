@@ -3,11 +3,20 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { initializeFirebase, getDb, getAuthInstance } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Plan = 'free' | 'pro';
+
+interface FirebaseConfig {
+    apiKey?: string;
+    authDomain?: string;
+    projectId?: string;
+    storageBucket?: string;
+    messagingSenderId?: string;
+    appId?: string;
+}
 
 type AuthContextType = {
   user: User | null;
@@ -25,45 +34,61 @@ const AuthContext = createContext<AuthContextType>({
   updatePlan: async () => {},
 });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ 
+    children,
+    firebaseConfig,
+    recaptchaSiteKey
+}: { 
+    children: React.ReactNode,
+    firebaseConfig: FirebaseConfig,
+    recaptchaSiteKey?: string
+}) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<Plan>('free');
 
   useEffect(() => {
+    // Initialize Firebase on the client with the config passed from the server layout
+    initializeFirebase(firebaseConfig, recaptchaSiteKey);
+    const auth = getAuthInstance();
+    const db = getDb();
+
+    if (!auth || !db) {
+        setLoading(false);
+        return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        // User is logged in, fetch their plan from Firestore
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           setPlan(userDoc.data().plan as Plan);
         } else {
-          // This case is for users who signed up before Firestore was implemented
-          // or if the doc creation failed on signup.
           await setDoc(userDocRef, { plan: 'free' });
           setPlan('free');
         }
       } else {
-        // User is logged out, reset plan to free
         setPlan('free');
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [firebaseConfig, recaptchaSiteKey]);
 
   const updatePlan = async (newPlan: Plan) => {
-    if (!user) return;
-    setPlan(newPlan); // Update local state immediately for instant UI feedback
-    const userDocRef = doc(db, 'users', user.uid);
+    const auth = getAuthInstance();
+    const db = getDb();
+    if (!auth?.currentUser || !db) return;
+    
+    setPlan(newPlan);
+    const userDocRef = doc(db, 'users', auth.currentUser.uid);
     try {
         await setDoc(userDocRef, { plan: newPlan }, { merge: true });
     } catch (error) {
         console.error("Error updating plan in Firestore: ", error);
-        // Optionally revert local state if DB update fails
     }
   };
 

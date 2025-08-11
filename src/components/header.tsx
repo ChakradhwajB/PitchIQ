@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { auth } from '@/lib/firebase';
+import { getAuthInstance } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
@@ -41,7 +41,10 @@ export function Header() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut(auth);
+    const auth = getAuthInstance();
+    if (auth) {
+        await signOut(auth);
+    }
     router.push('/');
   };
 

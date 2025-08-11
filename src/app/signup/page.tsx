@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { getAuthInstance, getDb } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,13 +45,26 @@ export default function SignUpPage() {
 
   const onSubmit = async (data: FormData) => {
     setLoading(true);
+    const auth = getAuthInstance();
+    const db = getDb();
+
+    if (!auth || !db) {
+        toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: 'Firebase is not initialized correctly.',
+        });
+        setLoading(false);
+        return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
+      const newUser = userCredential.user;
       
       // Create user document in Firestore with a default 'free' plan
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
+      await setDoc(doc(db, 'users', newUser.uid), {
+        email: newUser.email,
         plan: 'free',
       });
 
