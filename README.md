@@ -2,6 +2,14 @@
 
 PitchIQ is your ultimate destination for comprehensive soccer statistics, real-time match data, and in-depth player analysis. This Next.js application provides a rich, interactive experience for soccer fans to explore league standings, team and player details, match results, and the latest news.
 
+## Screenshot
+
+![KitVault Homepage](https://i.postimg.cc/x158LFLg/pitchiq-netlify-app.png)
+
+## Live Deployment
+
+[Live Deployment](https://pitchiq.netlify.app/)
+
 ## Key Features
 
 - **League Standings:** View up-to-date tables for major leagues, including form guides and team statistics.
